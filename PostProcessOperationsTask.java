@@ -153,8 +153,7 @@ public class PostProcessOperationsTask extends DynamicAttributeTask
                 System.out .println("summarising objectstore ...");
                 ObjectStore os = getObjectStoreWriter().getObjectStore();
                 if (!(os instanceof ObjectStoreInterMineImpl)) {
-                    throw new RuntimeException("cannot summarise ObjectStore - must be an "
-                                               + "instance of ObjectStoreInterMineImpl");
+                    throw new RuntimeException("cannot summarise ObjectStore - must be an instance of ObjectStoreInterMineImpl");
                 }
                 String configFileName = "objectstoresummary.config.properties";
                 ClassLoader classLoader = PostProcessOperationsTask.class.getClassLoader();
@@ -238,6 +237,10 @@ public class PostProcessOperationsTask extends DynamicAttributeTask
                 // Legume Federation
                 CreateProteinDomainReferences cpdr = new CreateProteinDomainReferences(getObjectStoreWriter());
                 cpdr.createProteinDomainReferences();
+            } else if ("populate-qtl-linkagegroup-ranges".equals(operation)) {
+                // Legume Federation
+                PopulateQTLLinkageGroupRanges pqlgr = new PopulateQTLLinkageGroupRanges(getObjectStoreWriter());
+                pqlgr.populateQTLLinkageGroupRanges();
             }
 
         } catch (BuildException e) {
