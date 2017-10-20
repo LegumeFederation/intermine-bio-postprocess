@@ -237,10 +237,14 @@ public class PostProcessOperationsTask extends DynamicAttributeTask
                 // Legume Federation
                 CreateProteinDomainReferences cpdr = new CreateProteinDomainReferences(getObjectStoreWriter());
                 cpdr.createProteinDomainReferences();
-            } else if ("populate-qtl-linkagegroup-ranges".equals(operation)) {
+            } else if ("populate-qtl-linkagegroups".equals(operation)) {
                 // Legume Federation
-                PopulateQTLLinkageGroupRanges pqlgr = new PopulateQTLLinkageGroupRanges(getObjectStoreWriter());
-                pqlgr.populateQTLLinkageGroupRanges();
+                PopulateQTLLinkageGroups pqlg = new PopulateQTLLinkageGroups(getObjectStoreWriter());
+                pqlg.populateQTLLinkageGroups();
+            } else if ("populate-linkagegroup-lengths".equals(operation)) {
+                // Legume Federation
+                PopulateLinkageGroupLengths plgl = new PopulateLinkageGroupLengths(getObjectStoreWriter());
+                plgl.populateLinkageGroupLengths();
             }
 
         } catch (BuildException e) {
