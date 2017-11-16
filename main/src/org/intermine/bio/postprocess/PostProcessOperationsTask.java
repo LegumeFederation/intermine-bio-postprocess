@@ -245,6 +245,10 @@ public class PostProcessOperationsTask extends DynamicAttributeTask
                 // Legume Federation
                 PopulateLinkageGroupLengths plgl = new PopulateLinkageGroupLengths(getObjectStoreWriter());
                 plgl.populateLinkageGroupLengths();
+            } else if ("create-ontology-parent-annotations".equals(operation)) {
+                // Legume Federation
+                CreateOntologyParentAnnotations copa = new CreateOntologyParentAnnotations(getObjectStoreWriter());
+                copa.createOntologyParentAnnotations();
             }
 
         } catch (BuildException e) {
