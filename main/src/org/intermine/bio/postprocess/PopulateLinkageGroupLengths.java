@@ -110,10 +110,12 @@ public class PopulateLinkageGroupLengths {
             boolean newLG = (!lgId.equals(prevLGId));
             if (newLG) {
                 // store this position, which should be the largest from sort order, as LG length
-                LinkageGroup tempLG = PostProcessUtil.cloneInterMineObject(lg);
-                tempLG.setFieldValue("length", position);
-                osw.store(tempLG);
-                prevLGId = lgId;
+                if (position>0.0) {
+                    LinkageGroup tempLG = PostProcessUtil.cloneInterMineObject(lg);
+                    tempLG.setFieldValue("length", position);
+                    osw.store(tempLG);
+                    prevLGId = lgId;
+                }
             }
         }
 
