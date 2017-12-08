@@ -135,7 +135,6 @@ public class CreateGOAnnotations {
                         goAnnotation.setFieldValue("ontologyTerm", goTerm);
                         goAnnotation.setFieldValue("subject", gene);
                         osw.store(goAnnotation);
-                        // // DOES THIS AUTOMATICALLY STORE THE gene.ontologyAnnotations reference???
                     }
                 }
             }

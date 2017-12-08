@@ -79,8 +79,6 @@ public class CreateProteinGeneReferences {
             String primaryIdentifier = (String) transcript.getFieldValue("primaryIdentifier");
             Gene gene = (Gene) transcript.getFieldValue("gene");
             Protein protein = (Protein) transcript.getFieldValue("protein");
-            if (gene==null) LOG.error("transcript "+primaryIdentifier+" has no related gene.");
-            if (protein==null) LOG.error("transcript "+primaryIdentifier+" has no related protein.");
             if (gene!=null && protein!=null) {
                 Gene tempGene = PostProcessUtil.cloneInterMineObject(gene);
                 Protein tempProtein = PostProcessUtil.cloneInterMineObject(protein);

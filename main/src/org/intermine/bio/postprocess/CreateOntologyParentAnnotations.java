@@ -58,7 +58,7 @@ import org.apache.log4j.Logger;
  * For given ontology annotations, create additional annotations with those ontology terms' parents.
  * This allows one to only specify the deepest ontology term for, say, a QTL, but be able to query the mine for higher-level terms.
  *
- * NOTE: HARD-CODED LIMIT TO TO: terms for now
+ * NOTE: hard-coded limit to TO terms for now
  *
  * @author Sam Hokin
  */
@@ -99,8 +99,9 @@ public class CreateOntologyParentAnnotations {
         QueryObjectReference ontologyTerm = new QueryObjectReference(qcOntologyAnnotation, "ontologyTerm");
         csOntologyAnnotation.addConstraint(new ContainsConstraint(ontologyTerm, ConstraintOp.CONTAINS, qcOntologyTerm));
 
-        // DEV -- term identifier constraint, speeds things up for dev
-        // csOntologyAnnotation.addConstraint(new SimpleConstraint(new QueryField(qcOntologyTerm,"identifier"), ConstraintOp.MATCHES, new QueryValue("TO:%")));
+        // HACK
+        // term identifier constraint: limit to TO: terms
+        csOntologyAnnotation.addConstraint(new SimpleConstraint(new QueryField(qcOntologyTerm,"identifier"), ConstraintOp.MATCHES, new QueryValue("TO:%")));
 
         // 2 OntologyAnnotation.ontologyTerm.parents
         QueryClass qcParents = new QueryClass(OntologyTerm.class);

@@ -249,6 +249,10 @@ public class PostProcessOperationsTask extends DynamicAttributeTask
                 // Legume Federation
                 CreateOntologyParentAnnotations copa = new CreateOntologyParentAnnotations(getObjectStoreWriter());
                 copa.createOntologyParentAnnotations();
+            } else if ("create-go-annotations".equals(operation)) {
+                // Legume Federation
+                CreateGOAnnotations cgoa = new CreateGOAnnotations(getObjectStoreWriter());
+                cgoa.createGOAnnotations();
             }
 
         } catch (BuildException e) {

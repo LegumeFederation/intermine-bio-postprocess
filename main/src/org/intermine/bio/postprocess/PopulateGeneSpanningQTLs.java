@@ -152,7 +152,6 @@ public class PopulateGeneSpanningQTLs {
             if ((newQTL || newChr) && markerCount>1 && startLoc>0 && startLoc<endLoc) {
                 // store last QTL span
                 qtlSpanSet.add(new QTLSpan(lastQTL, lastChrId, startLoc, endLoc));
-                LOG.info(lastQTLId+" "+lastChrId+":"+startLoc+"-"+endLoc+" ("+markerCount+" markers)");
             }
             if (newQTL) {
                 // new QTL, increment QTL count, reset Chr and marker counts and set start marker (HOPING THEY'RE ORDERED BY START!!!)
@@ -185,7 +184,6 @@ public class PopulateGeneSpanningQTLs {
         if (startLoc>endLoc) {
             // store last QTL span
             qtlSpanSet.add(new QTLSpan(lastQTL, lastChrId, startLoc, endLoc));
-            LOG.info(lastQTLId+" "+lastChrId+":"+startLoc+"-"+endLoc);
         }
         LOG.info("qtlSpanSet.size()="+qtlSpanSet.size());
 
