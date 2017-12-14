@@ -100,7 +100,6 @@ public class PopulatePublications {
             String abstractText = stringOrNull(pub.getFieldValue("abstractText"));
             int pubMedId = intOrZero(pub.getFieldValue("pubMedId"));
             String doi = stringOrNull(pub.getFieldValue("doi"));
-            // DEBUG
             LOG.info("------------------------------------------------");
             LOG.info(firstAuthor);
             LOG.info(title);
@@ -110,15 +109,15 @@ public class PopulatePublications {
                 WorksQuery wq = new WorksQuery();
                 boolean crossRefSuccess = false;
                 JSONArray authors = null;
+                String origTitle = title;
                 if (doi!=null) {
                     wq.queryDOI(doi);
                     crossRefSuccess = (wq.getStatus()!=null && wq.getStatus().equals("ok"));
                 } else if (firstAuthor!=null && title!=null) {
-                    wq.queryAuthorTitle(firstAuthor, title);
+                    wq.queryAuthorTitle(firstAuthor, origTitle);
                     crossRefSuccess = wq.isTitleMatched();
                 }
                 if (crossRefSuccess) {
-                    // DEBUG
                     LOG.info("Found CrossRef match:"+wq.getDOI());
                     // update everything from CrossRef
                     title = wq.getTitle();
@@ -136,11 +135,11 @@ public class PopulatePublications {
                     authors = wq.getAuthors();
                     if (authors.size()>0) {
                         JSONObject firstAuthorObject = (JSONObject) authors.get(0);
-                        firstAuthor = firstAuthorObject.get("family")+","+firstAuthorObject.get("given");
+                        firstAuthor = firstAuthorObject.get("family")+", "+firstAuthorObject.get("given");
                     }
                     if (authors.size()>1) {
                         JSONObject lastAuthorObject = (JSONObject) authors.get(authors.size()-1);
-                        lastAuthor = lastAuthorObject.get("family")+","+lastAuthorObject.get("given");
+                        lastAuthor = lastAuthorObject.get("family")+", "+lastAuthorObject.get("given");
                     }
                 }
 
@@ -148,11 +147,9 @@ public class PopulatePublications {
                     // query PubMed for PMID
                     PubMedSummary summary = new PubMedSummary(title);
                     if (summary.id==0) {
-                        // DEBUG
                         LOG.info("PMID not found.");
                     } else {
                         pubMedId = summary.id;
-                        // DEBUG
                         LOG.info("PMID="+summary.id);
                     }
                 }
@@ -172,6 +169,7 @@ public class PopulatePublications {
                 if (doi!=null) tempPub.setFieldValue("doi", doi);
 
                 if (authors!=null) {
+
                     // update publication.authors from CrossRef since it provides given and family names
                     LOG.info("Replacing publication.authors from CrossRef.");
 
@@ -189,9 +187,9 @@ public class PopulatePublications {
                     qAuthor.addToSelect(qcPublication);
                     QueryCollectionReference authorPublications = new QueryCollectionReference(qcAuthor, "publications");
                     csAuthor.addConstraint(new ContainsConstraint(authorPublications, ConstraintOp.CONTAINS, qcPublication));
-                    // constrain on this pub title
+                    // constrain on this pub's original title (since title may have been updated above, e.g. initcaps to lower case)
                     QueryField qfPubTitle = new QueryField(qcPublication, "title");
-                    SimpleConstraint scPubTitle = new SimpleConstraint(qfPubTitle, ConstraintOp.EQUALS, new QueryValue(title));
+                    SimpleConstraint scPubTitle = new SimpleConstraint(qfPubTitle, ConstraintOp.EQUALS, new QueryValue(origTitle));
                     csAuthor.addConstraint(scPubTitle);
                     qAuthor.setConstraint(csAuthor);
                     // put existing authors in a set for bulk deletion
@@ -230,15 +228,13 @@ public class PopulatePublications {
                             authorMap.put(name, author);
                         }
                         authorSet.add(author);
+                        LOG.info(author.getFieldValue("name"));
                     }
                     osw.commitTransaction();
 
                     // put these authors into the pub authors collection
                     tempPub.setFieldValue("authors", authorSet);
-                    // DEBUG
-                    for (Author author : authorSet) {
-                        LOG.info(author.getFieldValue("name"));
-                    }
+                    
                 }
 
                 // store this publication
