@@ -253,6 +253,10 @@ public class PostProcessOperationsTask extends DynamicAttributeTask
                 // Legume Federation
                 CreateGOAnnotations cgoa = new CreateGOAnnotations(getObjectStoreWriter());
                 cgoa.createGOAnnotations();
+            } else if ("populate-publications".equals(operation)) {
+                // Legume Federation
+                PopulatePublications pp = new PopulatePublications(getObjectStoreWriter());
+                pp.populatePublications();
             }
 
         } catch (BuildException e) {
