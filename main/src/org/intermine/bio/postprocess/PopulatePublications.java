@@ -69,8 +69,6 @@ public class PopulatePublications {
      */
     public void populatePublications() throws ObjectStoreException, IllegalAccessException {
         
-        LOG.info("Querying publications...");
-
         // hold authors built from CrossRef in a map so we don't store dupes; keyed by name
         Map<String,Author> authorMap = new HashMap<String,Author>();
         
@@ -103,9 +101,9 @@ public class PopulatePublications {
             int pubMedId = intOrZero(pub.getFieldValue("pubMedId"));
             String doi = stringOrNull(pub.getFieldValue("doi"));
             // DEBUG
-            System.out.println("------------------------------------------------");
-            System.out.println(firstAuthor);
-            System.out.println(title);
+            LOG.info("------------------------------------------------");
+            LOG.info(firstAuthor);
+            LOG.info(title);
             try {
 
                 // query CrossRef entry, update attributes if found
@@ -121,7 +119,7 @@ public class PopulatePublications {
                 }
                 if (crossRefSuccess) {
                     // DEBUG
-                    System.out.println("FOUND CrossRef MATCH:"+wq.getDOI());
+                    LOG.info("Found CrossRef match:"+wq.getDOI());
                     // update everything from CrossRef
                     title = wq.getTitle();
                     month = String.valueOf(wq.getIssueMonth());
@@ -151,11 +149,11 @@ public class PopulatePublications {
                     PubMedSummary summary = new PubMedSummary(title);
                     if (summary.id==0) {
                         // DEBUG
-                        System.out.println("PMID NOT FOUND.");
+                        LOG.info("PMID not found.");
                     } else {
                         pubMedId = summary.id;
                         // DEBUG
-                        System.out.println("PMID="+summary.id);
+                        LOG.info("PMID="+summary.id);
                     }
                 }
 
@@ -175,7 +173,7 @@ public class PopulatePublications {
 
                 if (authors!=null) {
                     // update publication.authors from CrossRef since it provides given and family names
-                    System.out.println("REPLACING PUBLICATION.AUTHORS FROM CrossRef.");
+                    LOG.info("Replacing publication.authors from CrossRef.");
 
                     // delete existing Author objects, first loading them into a collection
                     Query qAuthor = new Query();
@@ -239,7 +237,7 @@ public class PopulatePublications {
                     tempPub.setFieldValue("authors", authorSet);
                     // DEBUG
                     for (Author author : authorSet) {
-                        System.out.println(author.getFieldValue("name"));
+                        LOG.info(author.getFieldValue("name"));
                     }
                 }
 
@@ -249,7 +247,7 @@ public class PopulatePublications {
                 osw.commitTransaction();
                 
             } catch (Exception e) {
-                System.out.println(e);
+                LOG.error(e);
             }
 
         }
