@@ -170,7 +170,7 @@ public class PopulatePublications {
 
                 if (authors!=null) {
 
-                    // update publication.authors from CrossRef since it provides given and family names
+                    // update publication.authors from CrossRef since it provides given and family names; given often includes initials, e.g. "Douglas R"
                     LOG.info("Replacing publication.authors from CrossRef.");
 
                     // delete existing Author objects, first loading them into a collection
@@ -212,9 +212,36 @@ public class PopulatePublications {
                     osw.beginTransaction();
                     for (Object authorObject : authors)  {
                         JSONObject authorJSON = (JSONObject) authorObject;
-                        // IM Author attributes
+                        // IM Author attributes from CrossRef fields
                         String firstName = (String) authorJSON.get("given");
                         String lastName = (String) authorJSON.get("family");
+                        // split out initials if present
+                        // R. K. => R K
+                        // R.K.  => R K
+                        // Douglas R => Douglas R
+                        // Douglas R. => Douglas R
+                        String initials = null;
+                        // deal with space
+                        String[] parts = firstName.split(" ");
+                        if (parts.length==2) {
+                            if (parts[1].length()==1) {
+                                firstName = parts[0];
+                                initials = parts[1];
+                            } else if (parts[1].length()==2 && parts[1].endsWith(".")) {
+                                firstName = parts[0];
+                                initials = parts[1].substring(0,1);
+                            }
+                        }
+                        // pull initial out if it's an R.K. style first name (but not M.V.K.)
+                        if (initials==null && firstName.length()==4 && firstName.charAt(1)=='.' && firstName.charAt(3)=='.') {
+                            initials = String.valueOf(firstName.charAt(2));
+                            firstName = String.valueOf(firstName.charAt(0));
+                        }
+                        // remove trailing period from a remaining R. style first name
+                        if (firstName.length()==2 && firstName.charAt(1)=='.') {
+                            firstName = String.valueOf(firstName.charAt(0));
+                        }
+                        // name is used as key, ignore initials since sometimes there sometimes not
                         String name = firstName+" "+lastName;
                         Author author;
                         if (authorMap.containsKey(name)) {
@@ -224,11 +251,12 @@ public class PopulatePublications {
                             author.setFieldValue("firstName", firstName);
                             author.setFieldValue("lastName", lastName);
                             author.setFieldValue("name", name);
+                            if (initials!=null) author.setFieldValue("initials", initials);
                             osw.store(author);
                             authorMap.put(name, author);
+                            LOG.info(firstName+"|"+initials+"|"+lastName+"="+name);
                         }
                         authorSet.add(author);
-                        LOG.info(author.getFieldValue("name"));
                     }
                     osw.commitTransaction();
 
