@@ -106,15 +106,15 @@ public class PopulatePublications {
             try {
 
                 // query CrossRef entry, update attributes if found
-                WorksQuery wq = new WorksQuery();
+                WorksQuery wq = null;
                 boolean crossRefSuccess = false;
                 JSONArray authors = null;
                 String origTitle = title;
                 if (doi!=null) {
-                    wq.queryDOI(doi);
+                    wq = new WorksQuery(doi);
                     crossRefSuccess = (wq.getStatus()!=null && wq.getStatus().equals("ok"));
                 } else if (firstAuthor!=null && title!=null) {
-                    wq.queryAuthorTitle(firstAuthor, origTitle);
+                    wq = new WorksQuery(firstAuthor, origTitle);
                     crossRefSuccess = wq.isTitleMatched();
                 }
                 if (crossRefSuccess) {
