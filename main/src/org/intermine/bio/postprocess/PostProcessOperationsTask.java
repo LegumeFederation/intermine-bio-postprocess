@@ -139,6 +139,10 @@ public class PostProcessOperationsTask extends DynamicAttributeTask
                 CreateFlankingRegions cfr = new CreateFlankingRegions(getObjectStoreWriter());
                 LOGGER.info("Starting CreateFlankingRegions.createFlankingFeatures()");
                 cfr.createFlankingFeatures();
+                // optional if you have Supercontig as well as Chromosome records
+                CreateSupercontigFlankingRegions csfr = new CreateSupercontigFlankingRegions(getObjectStoreWriter());
+                LOGGER.info("Starting CreateSupercontigFlankingRegions.createFlankingFeatures()");
+                csfr.createFlankingFeatures();
             } else if ("create-intron-features".equals(operation)) {
                 IntronUtil iu = new IntronUtil(getObjectStoreWriter());
                 configureDynamicAttributes(iu);

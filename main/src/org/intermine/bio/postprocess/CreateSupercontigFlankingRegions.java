@@ -11,25 +11,21 @@ package org.intermine.bio.postprocess;
  */
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
 
 import org.apache.log4j.Logger;
 import org.intermine.bio.util.BioQueries;
 import org.intermine.metadata.ClassDescriptor;
 import org.intermine.metadata.MetaDataException;
-import org.intermine.model.bio.Chromosome;
+import org.intermine.model.bio.Supercontig;
 import org.intermine.model.bio.Gene;
 import org.intermine.model.bio.GeneFlankingRegion;
 import org.intermine.model.bio.Location;
 import org.intermine.objectstore.ObjectStore;
 import org.intermine.objectstore.ObjectStoreException;
 import org.intermine.objectstore.ObjectStoreWriter;
-import org.intermine.objectstore.query.Query;
-import org.intermine.objectstore.query.QueryClass;
 import org.intermine.objectstore.query.Results;
 import org.intermine.objectstore.query.ResultsRow;
 import org.intermine.util.DynamicUtil;
@@ -42,13 +38,13 @@ import org.intermine.util.DynamicUtil;
  * @author Sam Hokin
  *
  */
-public class CreateFlankingRegions {
+public class CreateSupercontigFlankingRegions {
 
-    private static final Logger LOG = Logger.getLogger(CreateFlankingRegions.class);
+    private static final Logger LOG = Logger.getLogger(CreateSupercontigFlankingRegions.class);
 
     private ObjectStoreWriter osw = null;
     private ObjectStore os;
-    private Map<Integer, Chromosome> chrs = new HashMap<Integer, Chromosome>();
+    private Map<Integer, Supercontig> chrs = new HashMap<Integer, Supercontig>();
 
     // the sizes in kb of flanking regions to create
     private static double[] distances = new double[] {0.5};
@@ -60,12 +56,12 @@ public class CreateFlankingRegions {
     private static boolean[] includeGenes = new boolean[] {false};
 
     /**
-     * Create a new CreateFlankingRegions object that will operate on the given
+     * Create a new CreateSupercontigFlankingRegions object that will operate on the given
      * ObjectStoreWriter.
      *
      * @param osw the ObjectStoreWriter to use when creating/changing objects
      */
-    public CreateFlankingRegions(ObjectStoreWriter osw) {
+    public CreateSupercontigFlankingRegions(ObjectStoreWriter osw) {
         this.osw = osw;
         this.os = osw.getObjectStore();
     }
@@ -76,28 +72,7 @@ public class CreateFlankingRegions {
      */
     public void createFlankingFeatures() throws ObjectStoreException {
 
-        // delete existing GeneFlankingRegion objects by first loading them into a collection...
-        LOG.info("Deleting existing gene flanking regions...");
-        Set<GeneFlankingRegion> gfrSet = new HashSet<GeneFlankingRegion>();
-        Query qGFR = new Query();
-        QueryClass qcGFR = new QueryClass(GeneFlankingRegion.class);
-        qGFR.addToSelect(qcGFR);
-        qGFR.addFrom(qcGFR);
-        Results gfrResults = osw.getObjectStore().execute(qGFR);
-        Iterator<?> gfrIter = gfrResults.iterator();
-        while (gfrIter.hasNext()) {
-            ResultsRow<?> rr = (ResultsRow<?>) gfrIter.next();
-            gfrSet.add((GeneFlankingRegion)rr.get(0));
-        }
-        // ...and then deleting them
-        LOG.info("Deleting existing GeneFlankingRegion records...");
-        osw.beginTransaction();
-        for (GeneFlankingRegion gfr : gfrSet) {
-            osw.delete(gfr);
-        }
-        osw.commitTransaction();
-
-        Results results = BioQueries.findLocationAndObjects(os, Chromosome.class, Gene.class, false, false, false, 1000);
+        Results results = BioQueries.findLocationAndObjects(os, Supercontig.class, Gene.class, false, false, false, 1000);
 
         Iterator<?> resIter = results.iterator();
 
@@ -109,7 +84,7 @@ public class CreateFlankingRegions {
             Integer chrId = (Integer) rr.get(0);
             Gene gene = (Gene) rr.get(1);
             Location loc = (Location) rr.get(2);
-            createAndStoreFlankingRegion(getChromosome(chrId), loc, gene);
+            createAndStoreFlankingRegion(getSupercontig(chrId), loc, gene);
             if ((count % 1000) == 0) {
                 LOG.info("Created flanking regions for " + count + " genes.");
             }
@@ -119,11 +94,11 @@ public class CreateFlankingRegions {
     }
 
 
-    private void createAndStoreFlankingRegion(Chromosome chr, Location geneLoc, Gene gene) throws ObjectStoreException {
+    private void createAndStoreFlankingRegion(Supercontig chr, Location geneLoc, Gene gene) throws ObjectStoreException {
 	
-        // This code can't cope with chromosomes that don't have a length
+        // This code can't cope with supercontigs that don't have a length
         if (chr.getLength() == null) {
-            LOG.warn("Attempted to create GeneFlankingRegions on a chromosome without a length: " + chr.getPrimaryIdentifier());
+            LOG.warn("Attempted to create GeneFlankingRegions on a supercontig without a length: " + chr.getPrimaryIdentifier());
             return;
         }
 
@@ -137,7 +112,7 @@ public class CreateFlankingRegions {
                     int geneEnd = geneLoc.getEnd().intValue();
                     int chrLength = chr.getLength().intValue();
 
-                    // gene touches a chromosome end so there isn't a flanking region
+                    // gene touches a supercontig end so there isn't a flanking region
                     if ((geneStart <= 1) || (geneEnd >= chrLength)) {
                         continue;
                     }
@@ -154,8 +129,8 @@ public class CreateFlankingRegions {
                         // GeneFlankingRegion.includeGene not in model so do nothing
                     }
                     region.setGene(gene);
-                    region.setChromosome(chr);
-                    region.setChromosomeLocation(location);
+                    region.setSupercontig(chr);
+                    region.setSupercontigLocation(location);
                     region.setOrganism(gene.getOrganism());
                     region.setPrimaryIdentifier(gene.getPrimaryIdentifier() + " " + distance + "kb " + direction);
 
@@ -176,8 +151,8 @@ public class CreateFlankingRegions {
                         end = includeGene ? geneEnd : geneStart - 1;
                     }
 
-                    // if the region hangs off the start or end of a chromosome set it to finish
-                    // at the end of the chromosome
+                    // if the region hangs off the start or end of a supercontig set it to finish
+                    // at the end of the supercontig
                     location.setStart(new Integer(Math.max(start, 1)));
                     int e = Math.min(end, chr.getLength().intValue());
                     location.setEnd(new Integer(e));
@@ -195,10 +170,10 @@ public class CreateFlankingRegions {
         }
     }
 
-    private Chromosome getChromosome(Integer chrId) throws ObjectStoreException {
-        Chromosome chr = chrs.get(chrId);
+    private Supercontig getSupercontig(Integer chrId) throws ObjectStoreException {
+        Supercontig chr = chrs.get(chrId);
         if (chr == null) {
-            chr = (Chromosome) os.getObjectById(chrId, Chromosome.class);
+            chr = (Supercontig) os.getObjectById(chrId, Supercontig.class);
             chrs.put(chrId, chr);
         }
         return chr;
