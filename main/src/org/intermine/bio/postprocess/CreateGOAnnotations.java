@@ -67,53 +67,52 @@ public class CreateGOAnnotations {
     public void createGOAnnotations() throws ObjectStoreException, IllegalAccessException {
 
         // delete existing GOAnnotation objects by first loading them into a collection...
-        Set<GOAnnotation> goaSet = new HashSet<GOAnnotation>();
         Query qGOA = new Query();
         QueryClass qcGOA = new QueryClass(GOAnnotation.class);
         qGOA.addToSelect(qcGOA);
         qGOA.addFrom(qcGOA);
         Results goaResults = osw.getObjectStore().execute(qGOA);
         Iterator<?> goaIter = goaResults.iterator();
+        Set<GOAnnotation> goaSet = new HashSet<GOAnnotation>();
         while (goaIter.hasNext()) {
             ResultsRow<?> rr = (ResultsRow<?>) goaIter.next();
             goaSet.add((GOAnnotation)rr.get(0));
         }
         // ...and then deleting them
-        LOG.info("Deleting existing GOAnnotation records...");
+        LOG.info("Deleting "+goaSet.size()+" existing GOAnnotation records...");
         osw.beginTransaction();
         for (GOAnnotation goa : goaSet) {
             osw.delete(goa);
         }
         osw.commitTransaction();
+        LOG.info("...done.");
 
-        // query all Gene records --> parse out GO terms -> create GOAnnotation entries and references
-        
+        // query all Gene records, loading Genes into a Set
         Query qGene = new Query();
         qGene.setDistinct(true);
-
-        // 0 Gene
         QueryClass qcGene = new QueryClass(Gene.class);
         qGene.addFrom(qcGene);
         qGene.addToSelect(qcGene);
         qGene.addToOrderBy(qcGene);
-
-        osw.beginTransaction();
-
-        // execute the query
         Results geneResults = osw.getObjectStore().execute(qGene);
         Iterator<?> geneIter = geneResults.iterator();
+        Set<Gene> geneSet = new HashSet<Gene>();
         while (geneIter.hasNext()) {
             ResultsRow<?> rr = (ResultsRow<?>) geneIter.next();
-            Gene gene = (Gene) rr.get(0);
+            geneSet.add((Gene)rr.get(0));
+        }
+        LOG.info("Retrieved "+geneSet.size()+" Gene objects for GO annotation.");
+
+        // now plow through the genes, creating GO annotation records
+        for (Gene gene : geneSet) {
             String description = (String) gene.getFieldValue("description");
-            // parse the description for GO identifiers, creating a GOAnnotation each time, and adding it to the gene's collection
+            // parse the description for GO identifiers, assuming comma-space format
             String[] goNumbers = StringUtils.substringsBetween(description, "GO:", " ");
             if (goNumbers!=null) {
-                // clone the Gene item for storage
-                Gene tempGene = PostProcessUtil.cloneInterMineObject(gene);
-                // add the GO terms
-                for (int j=0; j<goNumbers.length; j++) {
-                    String identifier = "GO:"+goNumbers[j];
+                // create and store the GO annotations
+                osw.beginTransaction();
+                for (int i=0; i<goNumbers.length; i++) {
+                    String identifier = "GO:"+goNumbers[i];
                     // query this GO term
                     Query q = new Query();
                     q.setDistinct(true);
@@ -135,12 +134,13 @@ public class CreateGOAnnotations {
                         goAnnotation.setFieldValue("ontologyTerm", goTerm);
                         goAnnotation.setFieldValue("subject", gene);
                         osw.store(goAnnotation);
+                    } else {
+                        LOG.error("GO term not found for ["+identifier+"]");
                     }
                 }
+                osw.commitTransaction();
             }
         }
-
-        osw.commitTransaction();
 
     }
         

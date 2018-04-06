@@ -62,6 +62,27 @@ public class PopulateLinkageGroupLengths {
      * @throws ObjectStoreException if the objectstore throws an exception
      */
     public void populateLinkageGroupLengths() throws ObjectStoreException, IllegalAccessException {
+
+        Set<String> lgWithLengths = new HashSet<String>();
+
+        LOG.info("Querying existing linkage group lengths...");
+
+        Query qLG = new Query();
+        qLG.setDistinct(true);
+        QueryClass qcLG = new QueryClass(LinkageGroup.class);
+        qLG.addToSelect(qcLG);
+        qLG.addFrom(qcLG);
+        Results lgResults = osw.getObjectStore().execute(qLG);
+        Iterator<?> lgIter = lgResults.iterator();
+        while (lgIter.hasNext()) {
+            ResultsRow<?> rrLG = (ResultsRow<?>) lgIter.next();
+            LinkageGroup lg = (LinkageGroup) rrLG.get(0);
+            String primaryIdentifier = (String) lg.getFieldValue("primaryIdentifier");
+            Double length = (Double) lg.getFieldValue("length");
+            if (length!=null) {
+                lgWithLengths.add(primaryIdentifier);
+            }
+        }
         
         LOG.info("Querying linkage groups and associated markers...");
         
@@ -75,7 +96,7 @@ public class PopulateLinkageGroupLengths {
         qLGP.addFrom(qcLGP);
 
         // 1 LinkageGroupPosition.linkageGroup
-        QueryClass qcLG = new QueryClass(LinkageGroup.class);
+        qcLG = new QueryClass(LinkageGroup.class);
         qLGP.addToSelect(qcLG);
         qLGP.addFrom(qcLG);
         QueryObjectReference linkageGroup = new QueryObjectReference(qcLGP, "linkageGroup");
@@ -111,11 +132,16 @@ public class PopulateLinkageGroupLengths {
             if (newLG) {
                 // store this position, which should be the largest from sort order, as LG length
                 if (position>0.0) {
-                    LinkageGroup tempLG = PostProcessUtil.cloneInterMineObject(lg);
-                    tempLG.setFieldValue("length", position);
-                    osw.store(tempLG);
-                    prevLGId = lgId;
+                    if (lgWithLengths.contains(lgId)) {
+                        LOG.info(lgId+" already contains length and is NOT being updated.");
+                    } else {
+                        LinkageGroup tempLG = PostProcessUtil.cloneInterMineObject(lg);
+                        tempLG.setFieldValue("length", position);
+                        osw.store(tempLG);
+                        LOG.info(lgId+" updated with length="+position);
+                    }
                 }
+                prevLGId = lgId;
             }
         }
 

@@ -261,6 +261,10 @@ public class PostProcessOperationsTask extends DynamicAttributeTask
                 // Legume Federation
                 PopulatePublications pp = new PopulatePublications(getObjectStoreWriter());
                 pp.populatePublications();
+            } else if ("populate-transcript-references".equals(operation)) {
+                // Legume Federation
+                PopulateTranscriptReferences ptr = new PopulateTranscriptReferences(getObjectStoreWriter());
+                ptr.populateTranscriptReferences();
             }
 
         } catch (BuildException e) {

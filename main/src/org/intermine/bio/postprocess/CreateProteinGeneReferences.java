@@ -35,7 +35,7 @@ import org.intermine.objectstore.query.ResultsRow;
 import org.apache.log4j.Logger;
 
 /**
- * Relate proteins to genes via transcripts: transcript.protein + transcript.gene = protein.genes, gene.proteins
+ * Relate proteins to genes via transcripts: transcript.protein + transcript.gene gives protein.genes, gene.proteins
  *
  * @author Sam Hokin
  */
