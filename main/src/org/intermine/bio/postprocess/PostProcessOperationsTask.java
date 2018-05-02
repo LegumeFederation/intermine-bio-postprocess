@@ -229,6 +229,10 @@ public class PostProcessOperationsTask extends DynamicAttributeTask
                 // Legume Federation
                 CreateProteinGeneReferences cpgr = new CreateProteinGeneReferences(getObjectStoreWriter());
                 cpgr.createProteinGeneReferences();
+            } else if ("create-mrna-gene-references".equals(operation)) {
+                // Legume Federation
+                CreateMRNAGeneReferences cmgr = new CreateMRNAGeneReferences(getObjectStoreWriter());
+                cmgr.createMRNAGeneReferences();
             } else if ("populate-gene-spanning-qtls".equals(operation)) {
                 // Legume Federation
                 PopulateGeneSpanningQTLs pgsq = new PopulateGeneSpanningQTLs(getObjectStoreWriter());
