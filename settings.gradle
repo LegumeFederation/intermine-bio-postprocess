@@ -1,0 +1,33 @@
+rootProject.name = 'bio-postprocess-legfed'
+
+include ':bio-postprocess-legfed-create-gene-flanking-regions',
+	':bio-postprocess-legfed-create-go-annotations',
+	':bio-postprocess-legfed-create-intron-features',
+	':bio-postprocess-legfed-create-mrna-gene-references',
+	':bio-postprocess-legfed-create-ontology-parent-annotations',
+	':bio-postprocess-legfed-create-protein-gene-references',
+	':bio-postprocess-legfed-create-proteindomain-references',
+	':bio-postprocess-legfed-create-qtl-linkagegroup-references',
+	':bio-postprocess-legfed-create-qtl-linkagegroupranges',
+	':bio-postprocess-legfed-create-supercontig-flanking-regions',
+	':bio-postprocess-legfed-create-transcript-references',
+	':bio-postprocess-legfed-populate-interpro-data',
+	':bio-postprocess-legfed-populate-gene-spanning-qtls',
+	':bio-postprocess-legfed-populate-linkagegroup-lengths',
+	':bio-postprocess-legfed-populate-publications'
+
+project(':bio-postprocess-legfed-create-gene-flanking-regions').projectDir       = new File(settingsDir, 'legfed-create-gene-flanking-regions')
+project(':bio-postprocess-legfed-create-go-annotations').projectDir              = new File(settingsDir, 'legfed-create-go-annotations')
+project(':bio-postprocess-legfed-create-intron-features').projectDir             = new File(settingsDir, 'legfed-create-intron-features')
+project(':bio-postprocess-legfed-create-mrna-gene-references').projectDir        = new File(settingsDir, 'legfed-create-mrna-gene-references')
+project(':bio-postprocess-legfed-create-ontology-parent-annotations').projectDir = new File(settingsDir, 'legfed-create-ontology-parent-annotations')
+project(':bio-postprocess-legfed-create-protein-gene-references').projectDir     = new File(settingsDir, 'legfed-create-protein-gene-references')
+project(':bio-postprocess-legfed-create-proteindomain-references').projectDir    = new File(settingsDir, 'legfed-create-proteindomain-references')
+project(':bio-postprocess-legfed-create-qtl-linkagegroup-references').projectDir = new File(settingsDir, 'legfed-create-qtl-linkagegroup-references')
+project(':bio-postprocess-legfed-create-qtl-linkagegroupranges').projectDir      = new File(settingsDir, 'legfed-create-qtl-linkagegroupranges')
+project(':bio-postprocess-legfed-create-supercontig-flanking-regions').projectDir= new File(settingsDir, 'legfed-create-supercontig-flanking-regions')
+project(':bio-postprocess-legfed-create-transcript-references').projectDir       = new File(settingsDir, 'legfed-create-transcript-references')
+project(':bio-postprocess-legfed-populate-gene-spanning-qtls').projectDir        = new File(settingsDir, 'legfed-populate-gene-spanning-qtls')
+project(':bio-postprocess-legfed-populate-interpro-data').projectDir             = new File(settingsDir, 'legfed-populate-interpro-data')
+project(':bio-postprocess-legfed-populate-linkagegroup-lengths').projectDir      = new File(settingsDir, 'legfed-populate-linkagegroup-lengths')
+project(':bio-postprocess-legfed-populate-publications').projectDir              = new File(settingsDir, 'legfed-populate-publications')
