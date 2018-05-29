@@ -18,6 +18,7 @@ import org.intermine.model.bio.Protein;
 import org.intermine.model.bio.ProteinHmmMatch;
 import org.intermine.model.bio.ProteinDomain;
 
+import org.intermine.bio.util.PostProcessUtil;
 import org.intermine.postprocess.PostProcessor;
 import org.intermine.bio.util.Constants;
 import org.intermine.metadata.ConstraintOp;

@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
 
+import org.intermine.bio.util.PostProcessUtil;
 import org.intermine.postprocess.PostProcessor;
 import org.intermine.bio.util.BioQueries;
 import org.intermine.metadata.ClassDescriptor;

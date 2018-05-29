@@ -19,6 +19,7 @@ import java.util.HashSet;
 import org.intermine.model.bio.Author;
 import org.intermine.model.bio.Publication;
 
+import org.intermine.bio.util.PostProcessUtil;
 import org.intermine.postprocess.PostProcessor;
 import org.intermine.metadata.ConstraintOp;
 import org.intermine.objectstore.ObjectStoreException;

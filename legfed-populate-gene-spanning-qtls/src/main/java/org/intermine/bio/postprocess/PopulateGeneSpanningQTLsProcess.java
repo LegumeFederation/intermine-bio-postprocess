@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.intermine.bio.util.PostProcessUtil;
 import org.intermine.postprocess.PostProcessor;
 import org.intermine.metadata.ConstraintOp;
 import org.intermine.model.bio.Chromosome;

@@ -34,6 +34,7 @@ import org.apache.commons.net.ftp.FTPClient;
 
 import org.apache.log4j.Logger;
 
+import org.intermine.bio.util.PostProcessUtil;
 import org.intermine.postprocess.PostProcessor;
 import org.intermine.metadata.ConstraintOp;
 import org.intermine.objectstore.ObjectStoreException;

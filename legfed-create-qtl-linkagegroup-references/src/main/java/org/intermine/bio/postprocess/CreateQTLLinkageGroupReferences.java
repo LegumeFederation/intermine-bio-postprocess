@@ -23,6 +23,7 @@ import org.intermine.model.bio.LinkageGroupPosition;
 import org.intermine.model.bio.LinkageGroupRange;
 import org.intermine.model.bio.QTL;
 
+import org.intermine.bio.util.PostProcessUtil;
 import org.intermine.postprocess.PostProcessor;
 import org.intermine.metadata.ConstraintOp;
 import org.intermine.objectstore.ObjectStoreException;

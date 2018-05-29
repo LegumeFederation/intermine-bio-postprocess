@@ -23,6 +23,7 @@ import org.intermine.model.bio.Gene;
 import org.intermine.model.bio.Protein;
 import org.intermine.model.bio.Transcript;
 
+import org.intermine.bio.util.PostProcessUtil;
 import org.intermine.postprocess.PostProcessor;
 import org.intermine.objectstore.ObjectStoreException;
 import org.intermine.objectstore.ObjectStoreWriter;

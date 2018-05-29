@@ -13,6 +13,7 @@ package org.intermine.bio.postprocess;
 import java.util.Collections;
 import java.util.Iterator;
 
+import org.intermine.bio.util.PostProcessUtil;
 import org.intermine.postprocess.PostProcessor;
 import org.intermine.bio.util.Constants;
 import org.intermine.metadata.ConstraintOp;

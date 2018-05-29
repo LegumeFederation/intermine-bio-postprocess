@@ -20,6 +20,7 @@ import java.util.HashSet;
 import org.intermine.model.bio.LinkageGroup;
 import org.intermine.model.bio.LinkageGroupPosition;
 
+import org.intermine.bio.util.PostProcessUtil;
 import org.intermine.postprocess.PostProcessor;
 import org.intermine.metadata.ConstraintOp;
 import org.intermine.objectstore.ObjectStoreException;
