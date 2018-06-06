@@ -49,9 +49,9 @@ import org.apache.log4j.Logger;
  *
  * @author Sam Hokin
  */
-public class CreateQTLLinkageGroupReferences extends PostProcessor {
+public class CreateQTLLinkageGroupReferencesProcess extends PostProcessor {
 
-    private static final Logger LOG = Logger.getLogger(CreateQTLLinkageGroupReferences.class);
+    private static final Logger LOG = Logger.getLogger(CreateQTLLinkageGroupReferencesProcess.class);
 
     static final DecimalFormat df = new DecimalFormat("#.00");
 
@@ -59,7 +59,7 @@ public class CreateQTLLinkageGroupReferences extends PostProcessor {
      * Construct with an ObjectStoreWriter, read and write from the same ObjectStore
      * @param osw object store writer
      */
-    public CreateQTLLinkageGroupReferences(ObjectStoreWriter osw) {
+    public CreateQTLLinkageGroupReferencesProcess(ObjectStoreWriter osw) {
         super(osw);
     }
 

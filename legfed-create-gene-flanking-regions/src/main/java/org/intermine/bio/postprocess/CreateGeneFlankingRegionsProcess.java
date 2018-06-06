@@ -47,7 +47,7 @@ import org.apache.log4j.Logger;
  */
 public class CreateGeneFlankingRegionsProcess extends PostProcessor {
 
-    private static final Logger LOG = Logger.getLogger(CreateGeneFlankingRegionsProcess.class);
+    // private static final Logger LOG = Logger.getLogger(CreateGeneFlankingRegionsProcess.class);
 
     private ObjectStore os;
     private Map<Integer, Chromosome> chrs = new HashMap<Integer, Chromosome>();
@@ -82,7 +82,7 @@ public class CreateGeneFlankingRegionsProcess extends PostProcessor {
     public void postProcess() throws ObjectStoreException {
 
         // delete existing GeneFlankingRegion objects by first loading them into a collection...
-        LOG.info("Deleting existing gene flanking regions...");
+        //LOG.info("Deleting existing gene flanking regions...");
         Set<GeneFlankingRegion> gfrSet = new HashSet<GeneFlankingRegion>();
         Query qGFR = new Query();
         QueryClass qcGFR = new QueryClass(GeneFlankingRegion.class);
@@ -95,7 +95,7 @@ public class CreateGeneFlankingRegionsProcess extends PostProcessor {
             gfrSet.add((GeneFlankingRegion)rr.get(0));
         }
         // ...and then deleting them
-        LOG.info("Deleting existing GeneFlankingRegion records...");
+        //LOG.info("Deleting existing GeneFlankingRegion records...");
         osw.beginTransaction();
         for (GeneFlankingRegion gfr : gfrSet) {
             osw.delete(gfr);
@@ -116,7 +116,7 @@ public class CreateGeneFlankingRegionsProcess extends PostProcessor {
             Location loc = (Location) rr.get(2);
             createAndStoreFlankingRegion(getChromosome(chrId), loc, gene);
             if ((count % 1000) == 0) {
-                LOG.info("Created flanking regions for " + count + " genes.");
+                //LOG.info("Created flanking regions for " + count + " genes.");
             }
             count++;
         }
@@ -128,7 +128,7 @@ public class CreateGeneFlankingRegionsProcess extends PostProcessor {
 	
         // This code can't cope with chromosomes that don't have a length
         if (chr.getLength() == null) {
-            LOG.warn("Attempted to create GeneFlankingRegions on a chromosome without a length: " + chr.getPrimaryIdentifier());
+            //LOG.warn("Attempted to create GeneFlankingRegions on a chromosome without a length: " + chr.getPrimaryIdentifier());
             return;
         }
 
