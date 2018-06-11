@@ -93,16 +93,19 @@ public class CreateTranscriptReferencesProcess extends PostProcessor {
                 String[] chunks = transcriptName.split("\\.");
                 int n = chunks.length;
             
-                // form gene name from transcript name
+                // form gene name from transcript name, presuming last chunk is a transcript number
                 String geneName = "";
                 for (int i=0; i<n-1; i++) {
                     if (i>0) geneName += ".";
                     geneName += chunks[i];
                 }
 
+                // protein name should be same as transcript name
+                String proteinName = transcriptName;
+
                 // HACK - protein should have same ID as transcript, but does not currently for lupan
                 // form protein ID from transcript ID
-                String proteinName = chunks[n-2]+"."+chunks[n-1];
+                // String proteinName = chunks[n-2]+"."+chunks[n-1];
             
                 // query the gene
                 Query qG = new Query();
