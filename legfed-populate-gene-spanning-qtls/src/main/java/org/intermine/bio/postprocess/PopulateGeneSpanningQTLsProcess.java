@@ -81,11 +81,11 @@ public class PopulateGeneSpanningQTLsProcess extends PostProcessor {
         qQTL.addToSelect(qcQTL);
         qQTL.addFrom(qcQTL);
 
-        // 1 QTL.associatedGeneticMarkers
+        // 1 QTL.markers
         QueryClass qcGeneticMarker = new QueryClass(GeneticMarker.class);
         qQTL.addToSelect(qcGeneticMarker);
         qQTL.addFrom(qcGeneticMarker);
-        QueryCollectionReference qtlGeneticMarkers = new QueryCollectionReference(qcQTL, "associatedGeneticMarkers");
+        QueryCollectionReference qtlGeneticMarkers = new QueryCollectionReference(qcQTL, "markers");
         csQTL.addConstraint(new ContainsConstraint(qtlGeneticMarkers, ConstraintOp.CONTAINS, qcGeneticMarker));
 
         // 2 GeneticMarker.chromosome

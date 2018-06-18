@@ -86,11 +86,11 @@ public class CreateQTLLinkageGroupRangesProcess extends PostProcessor {
         qQTL.addFrom(qcQTL);
         qQTL.addToOrderBy(qcQTL);
 
-        // 1 QTL.associatedGeneticMarkers
+        // 1 QTL.markers
         QueryClass qcGeneticMarker = new QueryClass(GeneticMarker.class);
         qQTL.addFrom(qcGeneticMarker);
         qQTL.addToSelect(qcGeneticMarker);
-        QueryCollectionReference qtlGeneticMarkers = new QueryCollectionReference(qcQTL, "associatedGeneticMarkers");
+        QueryCollectionReference qtlGeneticMarkers = new QueryCollectionReference(qcQTL, "markers");
         csQTL.addConstraint(new ContainsConstraint(qtlGeneticMarkers, ConstraintOp.CONTAINS, qcGeneticMarker));
 
         // 2 GeneticMarker.linkageGroupPositions

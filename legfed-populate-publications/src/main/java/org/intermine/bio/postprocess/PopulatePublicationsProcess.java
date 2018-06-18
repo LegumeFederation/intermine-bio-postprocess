@@ -170,7 +170,7 @@ public class PopulatePublicationsProcess extends PostProcessor {
                     wq = new WorksQuery(doi);
                     crossRefSuccess = (wq.getStatus()!=null && wq.getStatus().equals("ok"));
                     LOG.info("Queried DOI="+doi+" with result="+crossRefSuccess);
-                } else if (firstAuthor!=null && origTitle!=null) {
+                } else if (firstAuthor!=null || origTitle!=null) {
                     wq = new WorksQuery(firstAuthor, origTitle);
                     crossRefSuccess = wq.isTitleMatched();
                     LOG.info("Queried firstAuthor="+firstAuthor+", origTitle="+origTitle+" with result="+crossRefSuccess);
