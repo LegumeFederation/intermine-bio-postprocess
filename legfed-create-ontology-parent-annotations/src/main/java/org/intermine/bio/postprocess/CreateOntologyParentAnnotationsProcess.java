@@ -21,7 +21,7 @@ import java.util.LinkedHashMap;
 
 import org.intermine.postprocess.PostProcessor;
 import org.intermine.metadata.ConstraintOp;
-import org.intermine.model.bio.BioEntity;
+import org.intermine.model.bio.Annotatable;
 import org.intermine.model.bio.OntologyAnnotation;
 import org.intermine.model.bio.GOAnnotation;
 import org.intermine.model.bio.POAnnotation;
@@ -115,7 +115,7 @@ public class CreateOntologyParentAnnotationsProcess extends PostProcessor {
         Set<Pair<String,String>> subjectTermSet = new LinkedHashSet<Pair<String,String>>();
         
         // store the subject/parents in a Set of Pairs for insertion
-        Set<Pair<BioEntity,OntologyTerm>> subjectParentSet = new LinkedHashSet<Pair<BioEntity,OntologyTerm>>();
+        Set<Pair<Annotatable,OntologyTerm>> subjectParentSet = new LinkedHashSet<Pair<Annotatable,OntologyTerm>>();
 
         try {
             // execute the query
@@ -127,14 +127,14 @@ public class CreateOntologyParentAnnotationsProcess extends PostProcessor {
                 OntologyAnnotation annotation = (OntologyAnnotation) rr.get(0);
                 OntologyTerm term = (OntologyTerm) rr.get(1);
                 OntologyTerm parent = (OntologyTerm) rr.get(2);
-                BioEntity subject = (BioEntity) annotation.getFieldValue("subject");
+                Annotatable subject = (Annotatable) annotation.getFieldValue("subject");
                 // store the existing annotation in a Set
                 String subjectId = (String) subject.getFieldValue("primaryIdentifier");
                 String termIdentifier = (String) term.getFieldValue("identifier");
                 Pair<String,String> termPair = new MutablePair<String,String>(subjectId,termIdentifier);
                 subjectTermSet.add(termPair);
                 // store parent pairs in a Set
-                Pair<BioEntity,OntologyTerm> parentPair = new MutablePair<BioEntity,OntologyTerm>(subject,parent);
+                Pair<Annotatable,OntologyTerm> parentPair = new MutablePair<Annotatable,OntologyTerm>(subject,parent);
                 subjectParentSet.add(parentPair);
             }
         } catch (IllegalAccessException ex) {
@@ -146,8 +146,8 @@ public class CreateOntologyParentAnnotationsProcess extends PostProcessor {
         // add each parent annotation that isn't already in the database
         try {
             osw.beginTransaction();
-            for (Pair<BioEntity,OntologyTerm> pair : subjectParentSet) {
-                BioEntity subject = pair.getLeft();
+            for (Pair<Annotatable,OntologyTerm> pair : subjectParentSet) {
+                Annotatable subject = pair.getLeft();
                 OntologyTerm term = pair.getRight();
                 String subjectId = (String) subject.getFieldValue("primaryIdentifier");
                 String termIdentifier = (String) term.getFieldValue("identifier");

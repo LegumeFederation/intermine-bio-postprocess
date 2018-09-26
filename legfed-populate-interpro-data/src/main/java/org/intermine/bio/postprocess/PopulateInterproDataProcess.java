@@ -77,7 +77,7 @@ public class PopulateInterproDataProcess extends PostProcessor {
     Set<String> delRefSet;
 
     // special-purpose maps used here
-    Map<String,Interpro> gene3dMap; // maps GENE3D ids to Interpro objects
+    Map<String,Interpro> gene3dMap; // maps CATHGENE3D ids to Interpro objects
     Map<String,Interpro> pfamMap;   // maps PFAM ids to Interpro objects
     Map<String,String> pfamNameMap; // maps PFAM ids to PFAM names (e.g. PF01582 to TIR)
     Map<String,Interpro> pirsfMap;   // maps PIRSF ids to Interpro objects
@@ -124,8 +124,8 @@ public class PopulateInterproDataProcess extends PostProcessor {
         delRefSet = reader.getDelRefSet();
 
         // build the special-purpose maps
-        LOG.info("Building Gene3d, PFAM, PIRSF, TIGRFAMs and SMART maps...");
-        gene3dMap = new HashMap<String,Interpro>();  // GENE3D does not have short names
+        LOG.info("Building CATHGENE3D, PFAM, PIRSF, TIGRFAMs and SMART maps...");
+        gene3dMap = new HashMap<String,Interpro>();  // CATHGENE3D does not have short names
         pfamMap = new HashMap<String,Interpro>();
         pfamNameMap = new HashMap<String,String>();
         tigrMap = new HashMap<String,Interpro>();
@@ -137,9 +137,9 @@ public class PopulateInterproDataProcess extends PostProcessor {
         for (Interpro interpro : interproMap.values()) {
             List<DbXref> members = interpro.memberList.getEntries();
             for (DbXref member : members) {
-                if (member.db.equals("GENE3D")) {
+                if (member.db.equals("CATHGENE3D")) {
                     gene3dMap.put(member.dbkey, interpro);
-                    // GENE3D does not have separate short names
+                    // CATHGENE3D does not have distinct short names
                 } else if (member.db.equals("PFAM")) {
                     pfamMap.put(member.dbkey, interpro);
                     pfamNameMap.put(member.dbkey, member.name);

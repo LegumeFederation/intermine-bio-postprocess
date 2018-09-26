@@ -66,6 +66,9 @@ subprojects {
     compile group: 'com.thoughtworks.xstream', name: 'xstream', version: '1.4.10'
     compile group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
 
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-text
+    compile group: 'org.apache.commons', name: 'commons-text', version: '1.4'
+
   }
 
   dbModelConfig {

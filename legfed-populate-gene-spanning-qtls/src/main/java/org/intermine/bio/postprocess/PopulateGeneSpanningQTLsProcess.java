@@ -37,8 +37,7 @@ import org.intermine.objectstore.query.ResultsRow;
 import org.apache.log4j.Logger;
 
 /**
- * Find genes which are spanned by the genomic range of markers associated with QTLs when there are at least two (often three: nearest, flanking left and right).
- * Note: single gene-marker associations are not done here since they are found automatically as overlapping features.
+ * Find genes which are spanned by the genomic range of markers associated with QTLs. If only one marker, then it is simply the gene that overlaps that marker.
  *
  * Since the QTLs and genetic markers can be loaded from a variety of sources (flat files, chado), it makes sense to do this in post-processing when the 
  * QTLs, markers and genes exist in the database in a standard format.
@@ -153,7 +152,7 @@ public class PopulateGeneSpanningQTLsProcess extends PostProcessor {
                 // logic
                 newQTL = (!qtlId.equals(lastQTLId));
                 newChr = (!chrId.equals(lastChrId));
-                if ((newQTL || newChr) && markerCount>1 && startLoc>0 && startLoc<endLoc) {
+                if ((newQTL || newChr) && startLoc>0 && startLoc<=endLoc) {
                     // store last QTL span
                     qtlSpanSet.add(new QTLSpan(lastQTL, lastChrId, startLoc, endLoc));
                 }

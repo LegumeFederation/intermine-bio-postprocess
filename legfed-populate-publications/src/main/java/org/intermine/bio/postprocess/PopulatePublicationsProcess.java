@@ -58,7 +58,7 @@ public class PopulatePublicationsProcess extends PostProcessor {
 
     // hold authors in a map so we don't store dupes; keyed by name
     Map<String,Author> authorMap = new HashMap<String,Author>();
-    
+
     /**
      * Construct with an ObjectStoreWriter, read and write from the same ObjectStore
      * @param osw object store writer
@@ -135,29 +135,25 @@ public class PopulatePublicationsProcess extends PostProcessor {
 
                 // try to snag the PMID and DOI if we have just a title
                 if (doi==null && pubMedId==0 && title!=null) {
-                    // query PubMed for PMID from title
+                    // query PubMed for PMID from title; add DOI if it's there
                     PubMedSummary summary = new PubMedSummary(title);
                     if (summary.id==0) {
                         LOG.info("PMID not found from title:"+title);
                     } else {
                         pubMedId = summary.id;
-                        LOG.info("PMID found from title; PMID="+pubMedId);
+                        LOG.info("PMID found from title:"+pubMedId+":"+title);
+			LOG.info("Matching title:"+summary.title);
                         if (summary.doi!=null) {
                             doi = summary.doi;
-                            LOG.info("DOI="+doi+" found from PMID="+pubMedId);
+                            LOG.info("DOI found from PMID:"+pubMedId+":"+doi);
                         }
                     }
-                }
-
-                // get the DOI from PubMed if PMID exists and DOI does not
-                if (doi==null && pubMedId!=0) {
+                } else if (doi==null && pubMedId!=0) {
                     // query PubMed for data from PMID, update everything in case CrossRef fails
                     PubMedSummary summary = new PubMedSummary(pubMedId);
-                    if (summary.doi==null) {
-                        LOG.info("DOI not found from PMID="+pubMedId);
-                    } else {
+                    if (summary.doi!=null) {
                         doi = summary.doi;
-                        LOG.info("DOI="+doi+" found from PMID="+pubMedId);
+                        LOG.info("DOI found from PMID:"+pubMedId+":"+doi);
                     }
                 }
 
@@ -165,22 +161,21 @@ public class PopulatePublicationsProcess extends PostProcessor {
                 WorksQuery wq = null;
                 boolean crossRefSuccess = false;
                 JSONArray authors = null;
-                String origTitle = title;
                 if (doi!=null) {
                     wq = new WorksQuery(doi);
                     crossRefSuccess = (wq.getStatus()!=null && wq.getStatus().equals("ok"));
-                    LOG.info("Queried DOI="+doi+" with result="+crossRefSuccess);
-                } else if (firstAuthor!=null || origTitle!=null) {
-                    wq = new WorksQuery(firstAuthor, origTitle);
+                } else if (firstAuthor!=null || title!=null) {
+                    wq = new WorksQuery(firstAuthor, title);
                     crossRefSuccess = wq.isTitleMatched();
-                    LOG.info("Queried firstAuthor="+firstAuthor+", origTitle="+origTitle+" with result="+crossRefSuccess);
+                    if (crossRefSuccess) {
+                        LOG.info("DOI found from firstAuthor/title:"+firstAuthor+"/"+title);
+			LOG.info("Matching title:"+wq.getTitle());
+                    }
                 }
 
                 if (crossRefSuccess) {
 
                     // update attributes from CrossRef if found
-                    LOG.info("Found CrossRef match:"+wq.getDOI());
-                    
                     title = wq.getTitle();
                     month = String.valueOf(wq.getIssueMonth());
                     year = wq.getIssueYear();
@@ -289,10 +284,10 @@ public class PopulatePublicationsProcess extends PostProcessor {
 
                     // get the publication from its PMID and summary
                     PubMedSummary summary = new PubMedSummary(pubMedId);
+
+                    // store this publication
                     Publication tempPub = PostProcessUtil.cloneInterMineObject(pub);
                     populateFromSummary(tempPub, summary);
-                    
-                    // store this publication
                     osw.beginTransaction();
                     osw.store(tempPub);
                     osw.commitTransaction();
