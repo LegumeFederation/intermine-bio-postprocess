@@ -138,7 +138,9 @@ public class CreateProteinDomainReferencesProcess extends PostProcessor {
 
         // close transaction
         osw.commitTransaction();
-        
+
+        // close connection
+        osw.close();
     }
         
 }

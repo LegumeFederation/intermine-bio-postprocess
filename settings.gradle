@@ -5,6 +5,7 @@ include ':bio-postprocess-legfed-create-gene-flanking-regions',
 	':bio-postprocess-legfed-create-intron-features',
 	':bio-postprocess-legfed-create-mrna-gene-references',
 	':bio-postprocess-legfed-create-ontology-parent-annotations',
+	':bio-postprocess-legfed-create-exon-gene-references',
 	':bio-postprocess-legfed-create-protein-gene-references',
 	':bio-postprocess-legfed-create-proteindomain-references',
 	':bio-postprocess-legfed-create-qtl-linkagegroup-references',
@@ -21,6 +22,7 @@ project(':bio-postprocess-legfed-create-go-annotations').projectDir             
 project(':bio-postprocess-legfed-create-intron-features').projectDir             = new File(settingsDir, 'legfed-create-intron-features')
 project(':bio-postprocess-legfed-create-mrna-gene-references').projectDir        = new File(settingsDir, 'legfed-create-mrna-gene-references')
 project(':bio-postprocess-legfed-create-ontology-parent-annotations').projectDir = new File(settingsDir, 'legfed-create-ontology-parent-annotations')
+project(':bio-postprocess-legfed-create-exon-gene-references').projectDir     = new File(settingsDir, 'legfed-create-exon-gene-references')
 project(':bio-postprocess-legfed-create-protein-gene-references').projectDir     = new File(settingsDir, 'legfed-create-protein-gene-references')
 project(':bio-postprocess-legfed-create-proteindomain-references').projectDir    = new File(settingsDir, 'legfed-create-proteindomain-references')
 project(':bio-postprocess-legfed-create-qtl-linkagegroup-references').projectDir = new File(settingsDir, 'legfed-create-qtl-linkagegroup-references')

@@ -19,8 +19,8 @@ import org.intermine.postprocess.PostProcessor;
 import org.intermine.bio.util.Constants;
 import org.intermine.metadata.ConstraintOp;
 import org.intermine.model.bio.Gene;
-import org.intermine.model.bio.Protein;
-import org.intermine.model.bio.Transcript;
+import org.intermine.model.bio.Exon;
+import org.intermine.model.bio.MRNA;
 import org.intermine.objectstore.ObjectStore;
 import org.intermine.objectstore.ObjectStoreException;
 import org.intermine.objectstore.ObjectStoreWriter;
@@ -37,19 +37,19 @@ import org.intermine.objectstore.query.ResultsRow;
 import org.apache.log4j.Logger;
 
 /**
- * Relate proteins to genes via transcripts: transcript.protein + transcript.gene gives protein.genes, gene.proteins
+ * Relate exons to genes via mRNAs: exon.mRNA + mRNA.gene gives exon.gene.
  *
  * @author Sam Hokin
  */
-public class CreateProteinGeneReferencesProcess extends PostProcessor {
+public class CreateExonGeneReferencesProcess extends PostProcessor {
 
-    private static final Logger LOG = Logger.getLogger(CreateProteinGeneReferencesProcess.class);
+    private static final Logger LOG = Logger.getLogger(CreateExonGeneReferencesProcess.class);
 
     /**
-     * Create a new instance of CreateProteinGeneReferencesProcess
+     * Create a new instance of CreateExonGeneReferencesProcess
      * @param osw object store writer
 -     */
-    public CreateProteinGeneReferencesProcess(ObjectStoreWriter osw) {
+    public CreateExonGeneReferencesProcess(ObjectStoreWriter osw) {
         super(osw);
     }
 
@@ -62,37 +62,33 @@ public class CreateProteinGeneReferencesProcess extends PostProcessor {
      */
     public void postProcess() throws ObjectStoreException {
 
-        // query all transcripts for genes and proteins
-        Query qTranscript = new Query();
-        qTranscript.setDistinct(false);
-        QueryClass qcTranscript = new QueryClass(Transcript.class);
-        qTranscript.addFrom(qcTranscript);
-        qTranscript.addToSelect(qcTranscript);
-        qTranscript.addToOrderBy(qcTranscript);
+        // query exon-mRNA-gene
+        Query qExon = new Query();
+        qExon.setDistinct(false);
+        QueryClass qcExon = new QueryClass(Exon.class);
+        qExon.addFrom(qcExon);
+        qExon.addToSelect(qcExon);
+        qExon.addToOrderBy(qcExon);
 
         // execute the query
-        Results transcriptResults = osw.getObjectStore().execute(qTranscript);
-        Iterator<?> transcriptIter = transcriptResults.iterator();
+        Results exonResults = osw.getObjectStore().execute(qExon);
+        Iterator<?> exonIter = exonResults.iterator();
 
-        // begin transaction
         osw.beginTransaction();
-
-        while (transcriptIter.hasNext()) {
+        while (exonIter.hasNext()) {
             try {
-                ResultsRow<?> rr = (ResultsRow<?>) transcriptIter.next();
-                Transcript transcript = (Transcript) rr.get(0);
-                String primaryIdentifier = (String) transcript.getFieldValue("primaryIdentifier");
-                Gene gene = (Gene) transcript.getFieldValue("gene");
-                Protein protein = (Protein) transcript.getFieldValue("protein");
-                if (gene!=null && protein!=null) {
+                ResultsRow<?> rr = (ResultsRow<?>) exonIter.next();
+                Exon exon = (Exon) rr.get(0);
+                String primaryIdentifier = (String) exon.getFieldValue("primaryIdentifier");
+                MRNA mRNA = (MRNA) exon.getFieldValue("MRNA");
+                Gene gene = (Gene) mRNA.getFieldValue("gene");
+                if (gene==null) {
+                    LOG.error("Null gene retrieved for exon "+primaryIdentifier);
+                } else {
+                    Exon tempExon = PostProcessUtil.cloneInterMineObject(exon);
                     Gene tempGene = PostProcessUtil.cloneInterMineObject(gene);
-                    Protein tempProtein = PostProcessUtil.cloneInterMineObject(protein);
-                    // relate the gene and protein and store the relation
-                    // we'll assume a one-to-one relation here, even though Protein.genes and Gene.proteins are collections
-                    Set<Protein> proteinCollection = new HashSet<Protein>();
-                    proteinCollection.add(tempProtein);
-                    tempGene.setFieldValue("proteins", proteinCollection);
-                    osw.store(tempGene);
+                    tempExon.setFieldValue("gene", tempGene);
+                    osw.store(tempExon);
                 }
             } catch (IllegalAccessException ex) {
                 throw new ObjectStoreException(ex);
