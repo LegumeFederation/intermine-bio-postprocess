@@ -37,7 +37,7 @@ import org.intermine.objectstore.query.ResultsRow;
 import org.apache.log4j.Logger;
 
 /**
- * Relate proteins to genes via transcripts: transcript.protein + transcript.gene gives protein.genes, gene.proteins
+ * Relate proteins to genes via transcripts: transcript.protein + transcript.gene gives protein.gene.
  *
  * @author Sam Hokin
  */
@@ -85,14 +85,10 @@ public class CreateProteinGeneReferencesProcess extends PostProcessor {
                 Gene gene = (Gene) transcript.getFieldValue("gene");
                 Protein protein = (Protein) transcript.getFieldValue("protein");
                 if (gene!=null && protein!=null) {
-                    Gene tempGene = PostProcessUtil.cloneInterMineObject(gene);
+                    // set the protein.gene reference
                     Protein tempProtein = PostProcessUtil.cloneInterMineObject(protein);
-                    // relate the gene and protein and store the relation
-                    // we'll assume a one-to-one relation here, even though Protein.genes and Gene.proteins are collections
-                    Set<Protein> proteinCollection = new HashSet<Protein>();
-                    proteinCollection.add(tempProtein);
-                    tempGene.setFieldValue("proteins", proteinCollection);
-                    osw.store(tempGene);
+                    tempProtein.setFieldValue("gene", gene);
+                    osw.store(tempProtein);
                 }
             } catch (IllegalAccessException ex) {
                 throw new ObjectStoreException(ex);
