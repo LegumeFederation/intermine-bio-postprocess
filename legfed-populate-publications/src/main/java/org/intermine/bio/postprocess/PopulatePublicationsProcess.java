@@ -305,13 +305,13 @@ public class PopulatePublicationsProcess extends PostProcessor {
     }
 
     /**
-     * Return the string value of a field, or null
+     * Return the trimmed string value of a field, or null
      */
     String stringOrNull(Object fieldValue) {
         if (fieldValue==null) {
             return null;
         } else {
-            return (String)fieldValue;
+            return ((String)fieldValue).trim();
         }
     }
 
