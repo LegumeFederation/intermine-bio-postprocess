@@ -55,6 +55,7 @@ import org.ncgr.pubmed.PubMedSummary;
 public class PopulatePublicationsProcess extends PostProcessor {
 
     private static final Logger LOG = Logger.getLogger(PopulatePublicationsProcess.class);
+    private static final String API_KEY = "48cb39fb23bf1190394ccbae4e1d35c5c809";
 
     // hold authors in a map so we don't store dupes; keyed by name
     Map<String,Author> authorMap = new HashMap<String,Author>();
@@ -135,26 +136,34 @@ public class PopulatePublicationsProcess extends PostProcessor {
 
                 // try to snag the PMID and DOI if we have just a title
                 if (doi==null && pubMedId==0 && title!=null) {
-                    // query PubMed for PMID from title; add DOI if it's there
-                    PubMedSummary summary = new PubMedSummary(title);
-                    if (summary.id==0) {
-                        LOG.info("PMID not found from title:"+title);
-                    } else {
-                        pubMedId = summary.id;
-                        LOG.info("PMID found from title:"+pubMedId+":"+title);
-			LOG.info("Matching title:"+summary.title);
+                    try {
+                        // query PubMed for PMID from title; add DOI if it's there
+                        PubMedSummary summary = new PubMedSummary(title, API_KEY);
+                        if (summary.id==0) {
+                            LOG.info("PMID not found from title:"+title);
+                        } else {
+                            pubMedId = summary.id;
+                            LOG.info("PMID found from title:"+pubMedId+":"+title);
+                            LOG.info("Matching title:"+summary.title);
+                            if (summary.doi!=null) {
+                                doi = summary.doi;
+                                LOG.info("DOI found from PMID:"+pubMedId+":"+doi);
+                            }
+                        }
+                    } catch (Exception e) {
+                        LOG.error(e.getMessage());
+                    }
+                } else if (doi==null && pubMedId!=0) {
+                    try {
+                        // query PubMed for data from PMID, update everything in case CrossRef fails
+                        PubMedSummary summary = new PubMedSummary(pubMedId, API_KEY);
                         if (summary.doi!=null) {
                             doi = summary.doi;
                             LOG.info("DOI found from PMID:"+pubMedId+":"+doi);
                         }
-                    }
-                } else if (doi==null && pubMedId!=0) {
-                    // query PubMed for data from PMID, update everything in case CrossRef fails
-                    PubMedSummary summary = new PubMedSummary(pubMedId);
-                    if (summary.doi!=null) {
-                        doi = summary.doi;
-                        LOG.info("DOI found from PMID:"+pubMedId+":"+doi);
-                    }
+                    } catch (Exception e) {
+                        LOG.error(e.getMessage());
+                    }                        
                 }
 
                 // query CrossRef entry from DOI or title/firstAuthor
@@ -283,7 +292,7 @@ public class PopulatePublicationsProcess extends PostProcessor {
                 } else if (pubMedId!=0) {
 
                     // get the publication from its PMID and summary
-                    PubMedSummary summary = new PubMedSummary(pubMedId);
+                    PubMedSummary summary = new PubMedSummary(pubMedId, API_KEY);
 
                     // store this publication
                     Publication tempPub = PostProcessUtil.cloneInterMineObject(pub);
