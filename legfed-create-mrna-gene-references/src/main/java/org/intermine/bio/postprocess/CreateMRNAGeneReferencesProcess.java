@@ -85,16 +85,12 @@ public class CreateMRNAGeneReferencesProcess extends PostProcessor {
                 ResultsRow<?> rr = (ResultsRow<?>) mRNAIter.next();
                 MRNA mRNA = (MRNA) rr.get(0);
                 String primaryIdentifier = (String) mRNA.getFieldValue("primaryIdentifier");
-                // DEBUG
-                LOG.info("mRNA:"+primaryIdentifier);
                 String[] parts = primaryIdentifier.split("\\.");
                 int n = Integer.parseInt(parts[parts.length-1]);
                 String geneIdentifier = parts[0];
                 for (int i=1; i<parts.length-1; i++) {
                     geneIdentifier += "."+parts[i];
                 }
-                // DEBUG
-                LOG.info("Gene:"+geneIdentifier);
                 // query this particular gene
                 Query qGene = new Query();
                 qGene.setDistinct(false);

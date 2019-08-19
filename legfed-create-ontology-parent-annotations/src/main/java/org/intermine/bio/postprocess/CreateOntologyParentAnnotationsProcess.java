@@ -23,13 +23,7 @@ import org.intermine.postprocess.PostProcessor;
 import org.intermine.metadata.ConstraintOp;
 import org.intermine.model.bio.Annotatable;
 import org.intermine.model.bio.OntologyAnnotation;
-import org.intermine.model.bio.GOAnnotation;
-import org.intermine.model.bio.POAnnotation;
-import org.intermine.model.bio.TOAnnotation;
 import org.intermine.model.bio.OntologyTerm;
-import org.intermine.model.bio.GOTerm;
-import org.intermine.model.bio.POTerm;
-import org.intermine.model.bio.TOTerm;
 import org.intermine.objectstore.ObjectStoreException;
 import org.intermine.objectstore.ObjectStoreWriter;
 import org.intermine.objectstore.query.ConstraintSet;
@@ -158,17 +152,17 @@ public class CreateOntologyParentAnnotationsProcess extends PostProcessor {
                     // HACK: this shouldn't be hardcoded!
                     // add annotation subclass -- branch on type
                     if (termIdentifier.startsWith("GO:")) {
-                        GOAnnotation newAnnotation = (GOAnnotation) DynamicUtil.createObject(Collections.singleton(GOAnnotation.class));
+                        OntologyAnnotation newAnnotation = (OntologyAnnotation) DynamicUtil.createObject(Collections.singleton(OntologyAnnotation.class));
                         newAnnotation.setSubject(subject);
                         newAnnotation.setOntologyTerm(term);
                         osw.store(newAnnotation);
                     } else if (termIdentifier.startsWith("PO:")) {
-                        POAnnotation newAnnotation = (POAnnotation) DynamicUtil.createObject(Collections.singleton(POAnnotation.class));
+                        OntologyAnnotation newAnnotation = (OntologyAnnotation) DynamicUtil.createObject(Collections.singleton(OntologyAnnotation.class));
                         newAnnotation.setSubject(subject);
                         newAnnotation.setOntologyTerm(term);
                         osw.store(newAnnotation);
                     } else if (termIdentifier.startsWith("TO:")) {
-                        TOAnnotation newAnnotation = (TOAnnotation) DynamicUtil.createObject(Collections.singleton(TOAnnotation.class));
+                        OntologyAnnotation newAnnotation = (OntologyAnnotation) DynamicUtil.createObject(Collections.singleton(OntologyAnnotation.class));
                         newAnnotation.setSubject(subject);
                         newAnnotation.setOntologyTerm(term);
                         osw.store(newAnnotation);

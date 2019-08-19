@@ -40,11 +40,11 @@ import org.intermine.objectstore.query.SimpleConstraint;
 import org.intermine.util.DynamicUtil;
 
 import org.intermine.model.bio.Gene;
-import org.intermine.model.bio.GOAnnotation;
-import org.intermine.model.bio.GOTerm;
+import org.intermine.model.bio.OntologyAnnotation;
+import org.intermine.model.bio.OntologyTerm;
 
 /**
- * Create GOAnnotation records for genes, by parsing the GO term identifiers in their descriptions.
+ * Create GO OntologyAnnotation records for genes, by parsing the GO term identifiers in their descriptions.
  *
  * @author Sam Hokin
  */
@@ -69,22 +69,22 @@ public class CreateGOAnnotationsProcess extends PostProcessor {
      */
     public void postProcess() throws ObjectStoreException {
 
-        // delete existing GOAnnotation objects by first loading them into a collection...
+        // delete existing OntologyAnnotation objects by first loading them into a collection...
         Query qGOA = new Query();
-        QueryClass qcGOA = new QueryClass(GOAnnotation.class);
+        QueryClass qcGOA = new QueryClass(OntologyAnnotation.class);
         qGOA.addToSelect(qcGOA);
         qGOA.addFrom(qcGOA);
         Results goaResults = osw.getObjectStore().execute(qGOA);
         Iterator<?> goaIter = goaResults.iterator();
-        Set<GOAnnotation> goaSet = new HashSet<GOAnnotation>();
+        Set<OntologyAnnotation> goaSet = new HashSet<OntologyAnnotation>();
         while (goaIter.hasNext()) {
             ResultsRow<?> rr = (ResultsRow<?>) goaIter.next();
-            goaSet.add((GOAnnotation)rr.get(0));
+            goaSet.add((OntologyAnnotation)rr.get(0));
         }
         // ...and then deleting them
-        LOG.info("Deleting "+goaSet.size()+" existing GOAnnotation records...");
+        LOG.info("Deleting "+goaSet.size()+" existing OntologyAnnotation records...");
         osw.beginTransaction();
-        for (GOAnnotation goa : goaSet) {
+        for (OntologyAnnotation goa : goaSet) {
             osw.delete(goa);
         }
         osw.commitTransaction();
@@ -120,7 +120,7 @@ public class CreateGOAnnotationsProcess extends PostProcessor {
                         // query this GO term
                         Query q = new Query();
                         q.setDistinct(true);
-                        QueryClass qc = new QueryClass(GOTerm.class);
+                        QueryClass qc = new QueryClass(OntologyTerm.class);
                         q.addFrom(qc);
                         q.addToSelect(qc);
                         QueryField qfIdentifier = new QueryField(qc, "identifier");
@@ -133,8 +133,8 @@ public class CreateGOAnnotationsProcess extends PostProcessor {
                         Iterator<?> iter = results.iterator();
                         if (iter.hasNext()) {
                             ResultsRow<?> row = (ResultsRow<?>) iter.next();
-                            GOTerm goTerm = (GOTerm) row.get(0);
-                            GOAnnotation goAnnotation = (GOAnnotation) DynamicUtil.createObject(Collections.singleton(GOAnnotation.class));
+                            OntologyTerm goTerm = (OntologyTerm) row.get(0);
+                            OntologyAnnotation goAnnotation = (OntologyAnnotation) DynamicUtil.createObject(Collections.singleton(OntologyAnnotation.class));
                             goAnnotation.setFieldValue("ontologyTerm", goTerm);
                             goAnnotation.setFieldValue("subject", gene);
                             osw.store(goAnnotation);

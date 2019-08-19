@@ -20,9 +20,8 @@ sourceSets {
 dependencies {
     compile group: 'org.intermine', name: 'bio-model', version: bioVersion //to read genomic_keyDefs.properties
     compile group: 'org.intermine', name: 'intermine-integrate', version: imVersion
-    compile group: 'org.intermine', name: 'bio-source-legfed-chado-db', version: bioVersion
-    compile fileTree(dir: 'libs', include: '*.jar')
     bioModel group: 'org.intermine', name: 'bio-model', version: bioVersion, transitive: false
+    compile group: 'org.intermine', name: 'bio-source-legfed-chado-db', version: bioVersion
 }
 
 processResources {
