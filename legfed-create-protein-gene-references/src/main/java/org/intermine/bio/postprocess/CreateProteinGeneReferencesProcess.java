@@ -61,50 +61,40 @@ public class CreateProteinGeneReferencesProcess extends PostProcessor {
      */
     public void postProcess() throws ObjectStoreException {
 
-        // query all transcripts
-        Query qTranscript = new Query();
-        qTranscript.setDistinct(false);
+        // query Transcripts and Proteins with the same primaryIdentifier
+        Query query = new Query();
+        query.setDistinct(false);
+        
         QueryClass qcTranscript = new QueryClass(Transcript.class);
-        qTranscript.addFrom(qcTranscript);
-        qTranscript.addToSelect(qcTranscript);
-        qTranscript.addToOrderBy(qcTranscript);
+        query.addFrom(qcTranscript);
+        query.addToSelect(qcTranscript);
 
+        QueryClass qcProtein = new QueryClass(Protein.class);
+        query.addFrom(qcProtein);
+        query.addToSelect(qcProtein);
+
+        query.setConstraint(new SimpleConstraint(new QueryField(qcProtein,"primaryIdentifier"), ConstraintOp.EQUALS, new QueryField(qcTranscript,"primaryIdentifier")));
+        
         // execute the query
-        Results transcriptResults = osw.getObjectStore().execute(qTranscript);
-        Iterator<?> transcriptIter = transcriptResults.iterator();
+        Results results = osw.getObjectStore().execute(query);
+        Iterator<?> iter = results.iterator();
 
         // begin transaction
         osw.beginTransaction();
 
-        while (transcriptIter.hasNext()) {
+        while (iter.hasNext()) {
             try {
-                ResultsRow<?> rr = (ResultsRow<?>) transcriptIter.next();
+                ResultsRow<?> rr = (ResultsRow<?>) iter.next();
                 Transcript transcript = (Transcript) rr.get(0);
-                String primaryIdentifier = (String) transcript.getFieldValue("primaryIdentifier");
+                Protein protein = (Protein) rr.get(1);
                 Gene gene = (Gene) transcript.getFieldValue("gene");
                 if (gene!=null) {
-                    // query the Protein
-                    Query q = new Query();
-                    q.setDistinct(true);
-                    QueryClass qc = new QueryClass(Protein.class);
-                    q.addFrom(qc);
-                    q.addToSelect(qc);
-                    QueryField qf = new QueryField(qc, "primaryIdentifier");
-                    SimpleConstraint sc = new SimpleConstraint(qf, ConstraintOp.EQUALS, new QueryValue(primaryIdentifier));
-                    q.setConstraint(sc);
-                    // execute the query
-                    Results results = osw.getObjectStore().execute(q);
-                    Iterator<?> iter = results.iterator();
-                    if (iter.hasNext()) {
-                        ResultsRow<?> row = (ResultsRow<?>) iter.next();
-                        Protein protein = (Protein) row.get(0);
-                        // clone the Protein and add the Gene to the Protein.genes collection
-                        Protein tempProtein = PostProcessUtil.cloneInterMineObject(protein);
-                        Set<Gene> geneCollection = new HashSet<>();
-                        geneCollection.add(gene);
-                        tempProtein.setFieldValue("genes", geneCollection);
-                        osw.store(tempProtein);
-                    }
+                    // clone the Protein and add the Gene to the Protein.genes collection
+                    Protein tempProtein = PostProcessUtil.cloneInterMineObject(protein);
+                    Set<Gene> geneCollection = new HashSet<>();
+                    geneCollection.add(gene);
+                    tempProtein.setFieldValue("genes", geneCollection);
+                    osw.store(tempProtein);
                 }
             } catch (IllegalAccessException ex) {
                 throw new ObjectStoreException(ex);
