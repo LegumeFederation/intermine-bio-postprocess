@@ -123,7 +123,8 @@ public class PopulatePublicationsProcess extends PostProcessor {
                 // field values
                 String title = stringOrNull(pub.getFieldValue("title"));
                 String firstAuthor = stringOrNull(pub.getFieldValue("firstAuthor"));
-                String lastAuthor = stringOrNull(pub.getFieldValue("lastAuthor"));
+                // core IM model does not contain lastAuthor
+                // String lastAuthor = stringOrNull(pub.getFieldValue("lastAuthor"));
                 String month = stringOrNull(pub.getFieldValue("month"));
                 int year = intOrZero(pub.getFieldValue("year"));
                 String journal = stringOrNull(pub.getFieldValue("journal"));
@@ -202,16 +203,16 @@ public class PopulatePublicationsProcess extends PostProcessor {
                         JSONObject firstAuthorObject = (JSONObject) authors.get(0);
                         firstAuthor = firstAuthorObject.get("family")+", "+firstAuthorObject.get("given");
                     }
-                    if (authors.size()>1) {
-                        JSONObject lastAuthorObject = (JSONObject) authors.get(authors.size()-1);
-                        lastAuthor = lastAuthorObject.get("family")+", "+lastAuthorObject.get("given");
-                    }
+                    // core IM model does not contain lastAuthor
+                    // if (authors.size()>1) {
+                    //     JSONObject lastAuthorObject = (JSONObject) authors.get(authors.size()-1);
+                    //     lastAuthor = lastAuthorObject.get("family")+", "+lastAuthorObject.get("given");
+                    // }
 
                     // update publication object
                     Publication tempPub = PostProcessUtil.cloneInterMineObject(pub);
                     if (title!=null) tempPub.setFieldValue("title", title);
                     if (firstAuthor!=null) tempPub.setFieldValue("firstAuthor", firstAuthor);
-                    if (lastAuthor!=null) tempPub.setFieldValue("lastAuthor", lastAuthor);
                     if (month!=null && !month.equals("0")) tempPub.setFieldValue("month", month);
                     if (year>0) tempPub.setFieldValue("year", year);
                     if (journal!=null) tempPub.setFieldValue("journal", journal);
@@ -220,6 +221,8 @@ public class PopulatePublicationsProcess extends PostProcessor {
                     if (pages!=null) tempPub.setFieldValue("pages", pages);
                     if (pubMedId>0) tempPub.setFieldValue("pubMedId", String.valueOf(pubMedId));
                     if (doi!=null) tempPub.setFieldValue("doi", doi);
+                    // core IM model does not contain lastAuthor
+                    // if (lastAuthor!=null) tempPub.setFieldValue("lastAuthor", lastAuthor);
                     
                     if (authors!=null) {
                         
@@ -381,10 +384,11 @@ public class PopulatePublicationsProcess extends PostProcessor {
         if (getMonth(summary.pubDate)!=null) publication.setFieldValue("month", getMonth(summary.pubDate));
         if (summary.pages!=null && summary.pages.length()>0) publication.setFieldValue("pages", summary.pages);
         if (summary.issue!=null && summary.issue.length()>0) publication.setFieldValue("issue", summary.issue);
-        if (summary.lastAuthor!=null && summary.lastAuthor.length()>0) publication.setFieldValue("lastAuthor", summary.lastAuthor);
         if (summary.doi!=null && summary.doi.length()>0) publication.setFieldValue("doi", summary.doi);
         if (summary.volume!=null && summary.volume.length()>0) publication.setFieldValue("volume", summary.volume);
         if (summary.authorList!=null && summary.authorList.size()>0) publication.setFieldValue("firstAuthor", summary.authorList.get(0));
+        // core IM model does not contain lastAuthor
+        // if (summary.lastAuthor!=null && summary.lastAuthor.length()>0) publication.setFieldValue("lastAuthor", summary.lastAuthor);
         // the list of Author Items
         Set<Author> authorSet = new HashSet<Author>();
         osw.beginTransaction();

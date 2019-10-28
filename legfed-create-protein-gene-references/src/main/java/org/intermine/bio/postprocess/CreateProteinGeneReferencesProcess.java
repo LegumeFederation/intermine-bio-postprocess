@@ -16,28 +16,27 @@ import java.util.Set;
 
 import org.intermine.bio.util.PostProcessUtil;
 import org.intermine.postprocess.PostProcessor;
-import org.intermine.bio.util.Constants;
 import org.intermine.metadata.ConstraintOp;
-import org.intermine.model.bio.Gene;
-import org.intermine.model.bio.Protein;
-import org.intermine.model.bio.Transcript;
 import org.intermine.objectstore.ObjectStore;
 import org.intermine.objectstore.ObjectStoreException;
 import org.intermine.objectstore.ObjectStoreWriter;
 import org.intermine.objectstore.intermine.ObjectStoreInterMineImpl;
-import org.intermine.objectstore.query.ConstraintSet;
-import org.intermine.objectstore.query.ContainsConstraint;
 import org.intermine.objectstore.query.Query;
 import org.intermine.objectstore.query.QueryClass;
-import org.intermine.objectstore.query.QueryCollectionReference;
-import org.intermine.objectstore.query.QueryObjectReference;
+import org.intermine.objectstore.query.QueryField;
+import org.intermine.objectstore.query.QueryValue;
 import org.intermine.objectstore.query.Results;
 import org.intermine.objectstore.query.ResultsRow;
+import org.intermine.objectstore.query.SimpleConstraint;
+
+import org.intermine.model.bio.Gene;
+import org.intermine.model.bio.Protein;
+import org.intermine.model.bio.Transcript;
 
 import org.apache.log4j.Logger;
 
 /**
- * Relate proteins to genes via transcripts: transcript.protein + transcript.gene puts the gene into the Protein.genes collection (and vice-versa).
+ * Relate proteins to genes via transcripts: transcript.gene gives protein.genes where transcript.primaryIdentifier=protein.primaryIdentifier.
  *
  * @author Sam Hokin
  */
@@ -62,7 +61,7 @@ public class CreateProteinGeneReferencesProcess extends PostProcessor {
      */
     public void postProcess() throws ObjectStoreException {
 
-        // query all transcripts for genes and proteins
+        // query all transcripts
         Query qTranscript = new Query();
         qTranscript.setDistinct(false);
         QueryClass qcTranscript = new QueryClass(Transcript.class);
@@ -83,20 +82,35 @@ public class CreateProteinGeneReferencesProcess extends PostProcessor {
                 Transcript transcript = (Transcript) rr.get(0);
                 String primaryIdentifier = (String) transcript.getFieldValue("primaryIdentifier");
                 Gene gene = (Gene) transcript.getFieldValue("gene");
-                Protein protein = (Protein) transcript.getFieldValue("protein");
-                if (gene!=null && protein!=null) {
-                    // add the gene to the Protein.genes collection
-                    Protein tempProtein = PostProcessUtil.cloneInterMineObject(protein);
-                    Set<Gene> geneCollection = new HashSet<>();
-                    geneCollection.add(gene);
-                    tempProtein.setFieldValue("genes", geneCollection);
-                    osw.store(tempProtein);
+                if (gene!=null) {
+                    // query the Protein
+                    Query q = new Query();
+                    q.setDistinct(true);
+                    QueryClass qc = new QueryClass(Protein.class);
+                    q.addFrom(qc);
+                    q.addToSelect(qc);
+                    QueryField qf = new QueryField(qc, "primaryIdentifier");
+                    SimpleConstraint sc = new SimpleConstraint(qf, ConstraintOp.EQUALS, new QueryValue(primaryIdentifier));
+                    q.setConstraint(sc);
+                    // execute the query
+                    Results results = osw.getObjectStore().execute(q);
+                    Iterator<?> iter = results.iterator();
+                    if (iter.hasNext()) {
+                        ResultsRow<?> row = (ResultsRow<?>) iter.next();
+                        Protein protein = (Protein) row.get(0);
+                        // clone the Protein and add the Gene to the Protein.genes collection
+                        Protein tempProtein = PostProcessUtil.cloneInterMineObject(protein);
+                        Set<Gene> geneCollection = new HashSet<>();
+                        geneCollection.add(gene);
+                        tempProtein.setFieldValue("genes", geneCollection);
+                        osw.store(tempProtein);
+                    }
                 }
             } catch (IllegalAccessException ex) {
                 throw new ObjectStoreException(ex);
             }
         }
-
+        
         // close transaction
         osw.commitTransaction();
 

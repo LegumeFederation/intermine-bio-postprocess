@@ -39,6 +39,7 @@ import org.intermine.objectstore.query.SimpleConstraint;
 
 import org.intermine.util.DynamicUtil;
 
+import org.intermine.model.bio.Annotatable;
 import org.intermine.model.bio.Gene;
 import org.intermine.model.bio.OntologyAnnotation;
 import org.intermine.model.bio.OntologyTerm;
@@ -69,26 +70,41 @@ public class CreateGOAnnotationsProcess extends PostProcessor {
      */
     public void postProcess() throws ObjectStoreException {
 
-        // delete existing OntologyAnnotation objects by first loading them into a collection...
-        Query qGOA = new Query();
-        QueryClass qcGOA = new QueryClass(OntologyAnnotation.class);
-        qGOA.addToSelect(qcGOA);
-        qGOA.addFrom(qcGOA);
-        Results goaResults = osw.getObjectStore().execute(qGOA);
-        Iterator<?> goaIter = goaResults.iterator();
-        Set<OntologyAnnotation> goaSet = new HashSet<OntologyAnnotation>();
-        while (goaIter.hasNext()) {
-            ResultsRow<?> rr = (ResultsRow<?>) goaIter.next();
-            goaSet.add((OntologyAnnotation)rr.get(0));
+        // PathQuery query = new PathQuery(model);
+        // // Select the output columns:
+        // query.addViews("OntologyAnnotation.ontologyTerm.identifier",
+        //                "OntologyAnnotation.subject.primaryIdentifier");
+        // // Add orderby
+        // query.addOrderBy("OntologyAnnotation.ontologyTerm.identifier", OrderDirection.ASC);
+        // // Filter the results with the following constraints:
+        // query.addConstraint(Constraints.contains("OntologyAnnotation.ontologyTerm.identifier", "GO:"));
+
+        // Find existing GO annotation objects and load the mashed term and gene identifiers into a Set for future non-dupage
+        Query qAnnot = new Query();
+        qAnnot.setDistinct(true);
+        QueryClass qcAnnot = new QueryClass(OntologyAnnotation.class);
+        qAnnot.addFrom(qcAnnot);
+        qAnnot.addToSelect(qcAnnot);
+        // QueryField qfTerm = new QueryField(qcAnnot, "ontologyTerm");
+        // ConstraintSet csIdentifier = new ConstraintSet(ConstraintOp.AND);
+        // SimpleConstraint scIdentifier = new SimpleConstraint(qfIdentifier, ConstraintOp.CONTAINS, new QueryValue("GO:"));
+        // csIdentifier.addConstraint(scIdentifier);
+        // qAnnot.setConstraint(csIdentifier);
+        Results annotResults = osw.getObjectStore().execute(qAnnot);
+        Iterator<?> annotIter = annotResults.iterator();
+        Set<String> mashedIdentifiersSet = new HashSet<>();
+        while (annotIter.hasNext()) {
+            ResultsRow<?> rr = (ResultsRow<?>) annotIter.next();
+            OntologyAnnotation annotation = (OntologyAnnotation)rr.get(0);
+            OntologyTerm term = annotation.getOntologyTerm();
+            String termIdentifier = term.getIdentifier();
+            if (termIdentifier.startsWith("GO:")) {
+                Annotatable subject = annotation.getSubject();
+                String geneIdentifier = subject.getPrimaryIdentifier();
+                String mashedIdentifiers = mashIdentifiers(termIdentifier,geneIdentifier);
+                mashedIdentifiersSet.add(mashedIdentifiers);
+            }
         }
-        // ...and then deleting them
-        LOG.info("Deleting "+goaSet.size()+" existing OntologyAnnotation records...");
-        osw.beginTransaction();
-        for (OntologyAnnotation goa : goaSet) {
-            osw.delete(goa);
-        }
-        osw.commitTransaction();
-        LOG.info("...done.");
 
         // query all Gene records, loading Genes into a Set
         Query qGene = new Query();
@@ -99,16 +115,18 @@ public class CreateGOAnnotationsProcess extends PostProcessor {
         qGene.addToOrderBy(qcGene);
         Results geneResults = osw.getObjectStore().execute(qGene);
         Iterator<?> geneIter = geneResults.iterator();
-        Set<Gene> geneSet = new HashSet<Gene>();
+        Set<Gene> geneSet = new HashSet<>();
         while (geneIter.hasNext()) {
             ResultsRow<?> rr = (ResultsRow<?>) geneIter.next();
             geneSet.add((Gene)rr.get(0));
         }
         LOG.info("Retrieved "+geneSet.size()+" Gene objects for GO annotation.");
 
-        // now plow through the genes, creating GO annotation records
+        // now plow through the genes, creating GO annotation records if they don't already exist
+        int count = 0;
         for (Gene gene : geneSet) {
             try {
+                String geneIdentifier = (String) gene.getFieldValue("primaryIdentifier");
 	        String description = (String) gene.getFieldValue("description");
                 // parse the description for GO identifiers, assuming comma-space format
                 String[] goNumbers = StringUtils.substringsBetween(description, "GO:", " ");
@@ -116,30 +134,34 @@ public class CreateGOAnnotationsProcess extends PostProcessor {
                     // create and store the GO annotations
                     osw.beginTransaction();
                     for (int i=0; i<goNumbers.length; i++) {
-                        String identifier = "GO:"+goNumbers[i];
-                        // query this GO term
-                        Query q = new Query();
-                        q.setDistinct(true);
-                        QueryClass qc = new QueryClass(OntologyTerm.class);
-                        q.addFrom(qc);
-                        q.addToSelect(qc);
-                        QueryField qfIdentifier = new QueryField(qc, "identifier");
-                        ConstraintSet cs = new ConstraintSet(ConstraintOp.AND);
-                        SimpleConstraint sc = new SimpleConstraint(qfIdentifier, ConstraintOp.EQUALS, new QueryValue(identifier));
-                        cs.addConstraint(sc);
-                        q.setConstraint(cs);
-                        // execute the query
-                        Results results = osw.getObjectStore().execute(q);
-                        Iterator<?> iter = results.iterator();
-                        if (iter.hasNext()) {
-                            ResultsRow<?> row = (ResultsRow<?>) iter.next();
-                            OntologyTerm goTerm = (OntologyTerm) row.get(0);
-                            OntologyAnnotation goAnnotation = (OntologyAnnotation) DynamicUtil.createObject(Collections.singleton(OntologyAnnotation.class));
-                            goAnnotation.setFieldValue("ontologyTerm", goTerm);
-                            goAnnotation.setFieldValue("subject", gene);
-                            osw.store(goAnnotation);
-                        } else {
-                            LOG.error("GO term not found for ["+identifier+"]");
+                        String termIdentifier = "GO:"+goNumbers[i];
+                        String mashedIdentifiers = mashIdentifiers(termIdentifier, geneIdentifier);
+                        if (!mashedIdentifiersSet.contains(mashedIdentifiers)) {
+                            // query this ontology term
+                            Query q = new Query();
+                            q.setDistinct(true);
+                            QueryClass qc = new QueryClass(OntologyTerm.class);
+                            q.addFrom(qc);
+                            q.addToSelect(qc);
+                            QueryField qf = new QueryField(qc, "identifier");
+                            ConstraintSet cs = new ConstraintSet(ConstraintOp.AND);
+                            SimpleConstraint sc = new SimpleConstraint(qf, ConstraintOp.EQUALS, new QueryValue(termIdentifier));
+                            cs.addConstraint(sc);
+                            q.setConstraint(cs);
+                            // execute the query
+                            Results results = osw.getObjectStore().execute(q);
+                            Iterator<?> iter = results.iterator();
+                            if (iter.hasNext()) {
+                                ResultsRow<?> row = (ResultsRow<?>) iter.next();
+                                OntologyTerm term = (OntologyTerm) row.get(0);
+                                OntologyAnnotation goAnnotation = (OntologyAnnotation) DynamicUtil.createObject(Collections.singleton(OntologyAnnotation.class));
+                                goAnnotation.setFieldValue("ontologyTerm", term);
+                                goAnnotation.setFieldValue("subject", gene);
+                                osw.store(goAnnotation);
+                                count++;
+                            } else {
+                                LOG.error("GO term not found for ["+termIdentifier+"]");
+                            }
                         }
                     }
                     osw.commitTransaction();
@@ -148,7 +170,10 @@ public class CreateGOAnnotationsProcess extends PostProcessor {
                 throw new ObjectStoreException(ex);
             }
         }
-
+        LOG.info("Stored "+count+" additional GO annotations.");
     }
-        
+
+    String mashIdentifiers(String termIdentifier, String geneIdentifier) {
+        return termIdentifier+"_"+geneIdentifier;
+    }
 }
