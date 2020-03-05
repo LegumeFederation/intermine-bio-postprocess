@@ -62,7 +62,7 @@ public class CreateExonGeneReferencesProcess extends PostProcessor {
      */
     public void postProcess() throws ObjectStoreException {
 
-        // query exon-mRNA-gene
+        // query exons
         Query qExon = new Query();
         qExon.setDistinct(false);
         QueryClass qcExon = new QueryClass(Exon.class);
@@ -76,20 +76,26 @@ public class CreateExonGeneReferencesProcess extends PostProcessor {
 
         osw.beginTransaction();
         while (exonIter.hasNext()) {
+            ResultsRow<?> rr = (ResultsRow<?>) exonIter.next();
+            String exonId = null;
+            String mRNAId = null;
+            String geneId = null;
             try {
-                ResultsRow<?> rr = (ResultsRow<?>) exonIter.next();
                 Exon exon = (Exon) rr.get(0);
-                String primaryIdentifier = (String) exon.getFieldValue("primaryIdentifier");
+                exonId = (String) exon.getFieldValue("primaryIdentifier");
                 MRNA mRNA = (MRNA) exon.getFieldValue("MRNA");
+                mRNAId = (String) mRNA.getFieldValue("primaryIdentifier");
                 Gene gene = (Gene) mRNA.getFieldValue("gene");
-                if (gene==null) {
-                    LOG.error("Null gene retrieved for exon "+primaryIdentifier);
-                } else {
-                    Exon tempExon = PostProcessUtil.cloneInterMineObject(exon);
-                    Gene tempGene = PostProcessUtil.cloneInterMineObject(gene);
-                    tempExon.setFieldValue("gene", tempGene);
-                    osw.store(tempExon);
-                }
+                geneId = (String) gene.getFieldValue("primaryIdentifier");
+                Exon tempExon = PostProcessUtil.cloneInterMineObject(exon);
+                Gene tempGene = PostProcessUtil.cloneInterMineObject(gene);
+                tempExon.setFieldValue("gene", tempGene);
+                osw.store(tempExon);
+                osw.store(tempGene);
+                // DEBUG
+                LOG.info("Stored exon "+exonId+" with reference to gene "+geneId);
+            } catch (NullPointerException e) {
+                LOG.error("Null gene retrieved for mRNA "+mRNAId);
             } catch (IllegalAccessException ex) {
                 throw new ObjectStoreException(ex);
             }

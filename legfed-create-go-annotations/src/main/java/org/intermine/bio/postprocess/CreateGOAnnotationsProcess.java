@@ -70,26 +70,12 @@ public class CreateGOAnnotationsProcess extends PostProcessor {
      */
     public void postProcess() throws ObjectStoreException {
 
-        // PathQuery query = new PathQuery(model);
-        // // Select the output columns:
-        // query.addViews("OntologyAnnotation.ontologyTerm.identifier",
-        //                "OntologyAnnotation.subject.primaryIdentifier");
-        // // Add orderby
-        // query.addOrderBy("OntologyAnnotation.ontologyTerm.identifier", OrderDirection.ASC);
-        // // Filter the results with the following constraints:
-        // query.addConstraint(Constraints.contains("OntologyAnnotation.ontologyTerm.identifier", "GO:"));
-
         // Find existing GO annotation objects and load the mashed term and gene identifiers into a Set for future non-dupage
         Query qAnnot = new Query();
         qAnnot.setDistinct(true);
         QueryClass qcAnnot = new QueryClass(OntologyAnnotation.class);
         qAnnot.addFrom(qcAnnot);
         qAnnot.addToSelect(qcAnnot);
-        // QueryField qfTerm = new QueryField(qcAnnot, "ontologyTerm");
-        // ConstraintSet csIdentifier = new ConstraintSet(ConstraintOp.AND);
-        // SimpleConstraint scIdentifier = new SimpleConstraint(qfIdentifier, ConstraintOp.CONTAINS, new QueryValue("GO:"));
-        // csIdentifier.addConstraint(scIdentifier);
-        // qAnnot.setConstraint(csIdentifier);
         Results annotResults = osw.getObjectStore().execute(qAnnot);
         Iterator<?> annotIter = annotResults.iterator();
         Set<String> mashedIdentifiersSet = new HashSet<>();
@@ -105,6 +91,7 @@ public class CreateGOAnnotationsProcess extends PostProcessor {
                 mashedIdentifiersSet.add(mashedIdentifiers);
             }
         }
+        LOG.info("Found "+mashedIdentifiersSet.size()+" existing GO annotation records.");
 
         // query all Gene records, loading Genes into a Set
         Query qGene = new Query();
@@ -122,8 +109,15 @@ public class CreateGOAnnotationsProcess extends PostProcessor {
         }
         LOG.info("Retrieved "+geneSet.size()+" Gene objects for GO annotation.");
 
-        // now plow through the genes, creating GO annotation records if they don't already exist
+        //
+        // polygalacturonase 4;
+        // IPR000743 (Glycoside hydrolase, family 28), IPR011050 (Pectin lyase fold/virulence factor);
+        // GO:0004650 (polygalacturonase activity), GO:0005975 (carbohydrate metabolic process)
+        //
         int count = 0;
+        // store missing GO terms in this set to avoid multiple queries
+        Set<String> missingIdentifiers = new HashSet<>();
+        // now plow through the genes, creating GO annotation records if they don't already exist
         for (Gene gene : geneSet) {
             try {
                 String geneIdentifier = (String) gene.getFieldValue("primaryIdentifier");
@@ -136,7 +130,7 @@ public class CreateGOAnnotationsProcess extends PostProcessor {
                     for (int i=0; i<goNumbers.length; i++) {
                         String termIdentifier = "GO:"+goNumbers[i];
                         String mashedIdentifiers = mashIdentifiers(termIdentifier, geneIdentifier);
-                        if (!mashedIdentifiersSet.contains(mashedIdentifiers)) {
+                        if (!missingIdentifiers.contains(termIdentifier) && !mashedIdentifiersSet.contains(mashedIdentifiers)) {
                             // query this ontology term
                             Query q = new Query();
                             q.setDistinct(true);
@@ -160,6 +154,7 @@ public class CreateGOAnnotationsProcess extends PostProcessor {
                                 osw.store(goAnnotation);
                                 count++;
                             } else {
+                                missingIdentifiers.add(termIdentifier);
                                 LOG.error("GO term not found for ["+termIdentifier+"]");
                             }
                         }
